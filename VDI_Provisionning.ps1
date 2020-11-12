@@ -58,11 +58,12 @@ Param(
     [Parameter(Mandatory=$true)] [string[]]$Catalog,
     [Parameter(Mandatory=$false)] [switch]$Split,
     [Parameter(Mandatory=$true)] [string]$DeliveryGroup,
-    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\VDI_Provisionning.log"
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\VDI_Provisionning"
 )
 
 #Start logging
-Start-Transcript -Path $LogFile
+$date = Get-date -Format yyyy-MM-dd
+Start-Transcript -Path "$LogFile-$date.log"
 
 #Setting variables prior to their usage is not mandatory
 Set-StrictMode -Version 2
@@ -230,14 +231,17 @@ foreach($cat in $Catalog){
         Write-Host "Locking VM $VMName... " -NoNewline
         Lock-ProvVM -ProvisioningSchemeName $cat -Tag "Brokered" -VMID @($VM.VMId) -ErrorAction Stop
         Write-Host "OK" -ForegroundColor Green
+        Start-Sleep -Seconds 1 #Some issue if no delay before next step
         #Adding the VM to the catalog
         Write-Host "Adding VM $VMName to $cat catalog... " -NoNewline
         New-BrokerMachine -Cataloguid $Uid -MachineName $VM.ADAccountName -ErrorAction Stop | Out-Null
         Write-Host "OK" -ForegroundColor Green
+        Start-Sleep -Seconds 1 #Some issue if no delay before next step
         #Adding the VM to the Delivery Group
         Write-Host "Addind VM $VMName to $DeliveryGroup delivery group... " -NoNewline
         Add-BrokerMachine -MachineName "$env:USERDOMAIN\$VMName" -DesktopGroup $DeliveryGroup -ErrorAction Stop 
         Write-host "OK" -ForegroundColor Green
+        Start-Sleep -Seconds 1 #Some issue if no delay before next step
     }
     Write-Host "$count VDI created in $cat and attached to $DeliveryGroup!" -ForegroundColor Green
     #Reset variables before next loop, just in case
