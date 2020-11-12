@@ -221,7 +221,7 @@ foreach($cat in $Catalog){
     Write-Host "$Uid found" -ForegroundColor Green
     #Listing the newly created VM(s) in order to add to the catalog. "Brokered" tag means the VM is created but not attached
     #We are listing those
-    $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid | Where-Object {$_.Tag -ne "Brokered"}
+    $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid -MaxRecordCount 10000 | Where-Object {$_.Tag -ne "Brokered"}
     Write-Host "Assigning newly created machines to $cat..."
     Foreach($VM in $ProvVMS){
         $count++
