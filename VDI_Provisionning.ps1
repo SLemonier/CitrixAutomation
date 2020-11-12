@@ -62,7 +62,7 @@ Param(
 )
 
 #Start logging
-$date = Get-date -Format yyyy-MM-dd
+$date = Get-date -Format yyyy-MM-dd:HH-mm
 Start-Transcript -Path "$LogFile-$date.log"
 
 #Setting variables prior to their usage is not mandatory
@@ -224,6 +224,7 @@ foreach($cat in $Catalog){
     #We are listing those
     $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid -MaxRecordCount 10000 | Where-Object {$_.Tag -ne "Brokered"}
     Write-Host "Assigning newly created machines to $cat..."
+    Start-Sleep -Seconds 10 #Adding delay to avoid an error if next step start too soon
     Foreach($VM in $ProvVMS){
         $count++
         $VMName = $VM.VMName
