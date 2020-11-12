@@ -127,7 +127,7 @@ foreach($cat in $Catalog){
 }
 #If one or more catalog(s) got an error, stop processing
 if($errorcount -ne 0){
-    Write-Host "One of the catalog does not exist. Please, check there is no mistype, the catalog(s) exist(s), or it is a MCS catalog before continuing." -ForegroundColor Red
+    Write-Host "One of the catalog does not exist or is not a MCS catalog. Please, check there is no mistype, the catalog(s) exist(s), or it is a MCS catalog before continuing." -ForegroundColor Red
     Stop-Transcript 
     break
 }
@@ -178,20 +178,21 @@ Write-Host "All the parameters were validated. Continue processing..." -Foregrou
 
 #reset some variables
 $errorcount = 0
+$count = 0
 
 ################################################################################################
 #Let the fun begin
 ################################################################################################
 
 foreach($cat in $Catalog){
-    Write-Host "Starting provisionning in $cat" -ForegroundColor Yellow
+    Write-Host "Starting provisionning of $VDICount VM(s) in $cat" -ForegroundColor Yellow
     #Find IdentityPool for naming convention, OU settings of the Catalog
     Write-Host "Getting IdentityPool... " -NoNewline
-    $IdentityPool = Get-AcctIdentityPool -IdentityPoolName $cat
+    $IdentityPool = (Get-AcctIdentityPool -IdentityPoolName $cat).IdentityPoolUid.Guid
     Write-Host "$IdentityPool found" -ForegroundColor Green
     #Creating the account in AD and in the IndentityPool
     Write-Host "Creating account(s)... " -NoNewline
-    $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool.IdentityPoolUid -ErrorAction Stop
+    $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool -ErrorAction Stop
     Write-Host "OK" -ForegroundColor Green
     #Creating the VM(s) using the name(s) list from the previous command
     Write-Host "Creating the virtual machine(s)... "
@@ -223,24 +224,26 @@ foreach($cat in $Catalog){
     $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid | Where-Object {$_.Tag -ne "Brokered"}
     Write-Host "Assigning newly created machines to $cat..."
     Foreach($VM in $ProvVMS){
+        $count++
         $VMName = $VM.VMName
         #Lock the VM to indicate the VM is used (assigned to a catalog)
         Write-Host "Locking VM $VMName... " -NoNewline
         Lock-ProvVM -ProvisioningSchemeName $cat -Tag "Brokered" -VMID @($VM.VMId) -ErrorAction Stop
         Write-Host "OK" -ForegroundColor Green
         #Adding the VM to the catalog
-        Write-Host "Adding VM $VMName to $cat... " -NoNewline
+        Write-Host "Adding VM $VMName to $cat catalog... " -NoNewline
         New-BrokerMachine -Cataloguid $Uid -MachineName $VM.ADAccountName -ErrorAction Stop | Out-Null
         Write-Host "OK" -ForegroundColor Green
         #Adding the VM to the Delivery Group
-        Write-Host "Addind VM $VMName to $DeliveryGroup... " -NoNewline
+        Write-Host "Addind VM $VMName to $DeliveryGroup delivery group... " -NoNewline
         Add-BrokerMachine -MachineName "$env:USERDOMAIN\$VMName" -DesktopGroup $DeliveryGroup -ErrorAction Stop 
         Write-host "OK" -ForegroundColor Green
     }
-    Write-Host "$VDICount VDI created in $cat and attached to $DeliveryGroup!" -ForegroundColor Green
+    Write-Host "$count VDI created in $cat and attached to $DeliveryGroup!" -ForegroundColor Green
     #Reset variables before next loop, just in case
     $adAccounts = $null
     $ProvVMS = $null
+    $count = $null
 }
 
 #Stop logging
