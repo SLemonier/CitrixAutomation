@@ -1,54 +1,113 @@
 <#
-.SYNOPSIS
-  Provision a given number of Windows 10 VDI
-.DESCRIPTION
-  Provision a given number of Windows 10 VDI provided as a paramter
-.EXAMPLE
-    PS C:\PSScript > VDI_Provisionning.ps1 -VDICount 10 
-    Provision 10 new non persistent Windows 10 VDI, split equally between the two DTC (GV1 and GV2)
-.INPUTS
-    None. You cannot pipe objects to this script.
-.OUTPUTS
-    No objects are output from this script. This script creates its own logs files.
-.NOTES
-  Version:        0.1
-  Author:         Steven Lemonier
-  Creation Date:  2020-11-04
+ .Synopsis
+ Provision a given number of VM(s) in one or more MCS catalog(s) and assign the VM(s) to a delivery group.
+
+ .Description
+ Provision a given number of VM(s).
+ This script supports to provision in several MCS catalogs.
+ It also supports to attach the newly created VM(s) to a delivery group (only one is supported).
+ Finally, you can specify to split equally the VM(s) to provision into different MCS catalogs (optionnal).
+
+ .Parameter DeliveryController
+ Specifiy the Delivery Controller to use for the provision
+ This parameter is optionnal, by default it will use with the local machine.
+
+ .Parameter VDICount
+ Specify how much VM(s) to provision (integer).
+ This parameter is mandatory.
+
+ .Parameter Catalog
+ Specify a list of MCS catalogs to provision the VM(s) to.
+ This parameter is mandatory.
+
+ .Parameter Split
+ Split equally the number of VM(s) to provision into the MCS catalogs provided with -Catalog parameter.
+ This paramater is optionnal.
+
+ .Parameter DeliveryGroup
+ Specifiy the DesktopGroup to attach to the newly created VM(s).
+ This parameter is mandatory.
+
+ .Parameter Log
+ Specifiy the output file for the logs.
+ This parameter is optionnal, by default, it will create a file in the current directory.
+
+ .Example
+ # Provision 10 VMs to the "Windows 10" catalog and assign them to the "Desktop" delivery group.
+ VDI_Provisionning.ps1 -VDICount 10 -Catalog "Windows10" -DeliveryGroup "Desktop"
+
+ .Example
+ # Connect to "CTXDDC01" to provision 10 VMs to the "Windows 10" catalog and assign them to the "Desktop" delivery group.
+ VDI_Provisionning.ps1 -DeliveryController "CTXDDC01" -VDICount 10 -Catalog "Windows10" -DeliveryGroup "Desktop"
+
+.Example
+ # Provision 10 VMs to the "DTC1" and "DTC2" catalogs    and assign them to the "Desktop" delivery group.
+ VDI_Provisionning.ps1 -VDICount 10 -Catalog "DTC1","DTC2" -DeliveryGroup "Desktop"
+
+ .Example
+ # Provision 5 (10 split equally between two catalogs) VMs to the "DTC1" and "DTC2" catalogs, assign them 
+ to the "Desktop" delivery group and log the output in C:\Temp
+ VDI_Provisionning.ps1 -VDICount 10 -Catalog "DTC1","DTC2" -Split -DeliveryGroup "Desktop" -Log "C:\temp"
 #>
 
 [CmdletBinding()]
 Param(
     # Declaring input variables for the script
-    [Parameter(Position=0, Mandatory=$true)] [int]$VDICount,
-    [Parameter(Position = 1, Mandatory=$False)][Alias("OF")][ValidateNotNullOrEmpty()] [string]$OutFilePath="C:\Temp\VDI_Provisionning.log"
+    [Parameter(Mandatory=$false)] [string]$DeliveryController,
+    [Parameter(Mandatory=$true)] [int]$VDICount,
+    [Parameter(Mandatory=$true)] [string[]]$Catalog,
+    [Parameter(Mandatory=$false)] [switch]$Split,
+    [Parameter(Mandatory=$true)] [string]$DeliveryGroup,
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\VDI_Provisionning.log"
 )
 
-Set-StrictMode -Version 2
-Add-PSSnapin Citrix* -erroraction silentlycontinue
+#Start logging
+Start-Transcript -Path $LogFile
 
-function Log {
-    param (
-        [parameter(Mandatory=$true)]
-        [ValidateNotNullOrEmpty()]$log
-    )
-    if(Test-Path -Path $OutFilePath){
-        if((get-item $OutFilePath).Length -gt 5mb){
-            $date = Get-date -Format yyyy-MM-dd
-            Move-Item -Path $OutFilePath -Destination "C:\Temp\VDI_Provisionning-$date.log"
-        }
+#Setting variables prior to their usage is not mandatory
+Set-StrictMode -Version 2
+
+#Check Snapin can be loaded
+Write-Host "Loading Citrix Snapin... " -NoNewline
+if(!(Add-PSSnapin Citrix* -ErrorAction SilentlyContinue -PassThru )){
+    Write-Host "Failed" -ForegroundColor Red
+    Write-Host "Citrix Snapin cannot be loaded. Pleaase, check the component is installed on the computer." -ForegroundColor Red
+    #Stop logging
+    Stop-Transcript 
+    break
+}
+Write-Host "OK" -ForegroundColor Green
+
+#Checking the parameters
+
+#Check if the parameter is set or if it has to use the local machine
+if($DeliveryController){
+    #Check if the parameter is a FQDN or not
+    Write-Host "Trying to contact the Delivery Controller $DeliveryController... " -NoNewline
+    if($DeliveryController -match "."){
+        $DDC = Get-BrokerController -DNSName "$DeliveryController"
+    } else {
+        $DDC = Get-BrokerController -DNSName "$DeliveryController.$env:USERDNSDOMAIN"
     }
-    $ScriptTime = Get-Date -Format yyyy.MM.dd-HH:mm:ss
-    if($log -match "ERROR"){
-        Write-host "[$scriptTime] $log" -ForegroundColor Red
-    } 
-    elseif ($log -match "OK") {
-        Write-host "[$scriptTime] $log" -ForegroundColor Green
-    }else{
-        Write-Host "[$scriptTime] $log"
-    }
-    "[$scriptTime] $log" | Out-File -FilePath $OutFilePath -Append
+} else {
+    Write-Host "Trying to contact the Delivery Controller $env:COMPUTERNAME... " -NoNewline
+    $DDC = Get-BrokerController -DNSName "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
+}
+if(($DDC)){
+    Write-Host "OK" -ForegroundColor Green
+} else {
+    Write-Host "Failed" -ForegroundColor Red
+    Write-Host "Cannot contact the Delivery Controller. Check the role is installed on the target computer and your account is allowed to communicate with it."
 }
 
+#Stop logging
+Stop-Transcript 
+
+
+
+
+
+<#
 function ProvisionWindows10 {
     param (
         [parameter(position=0,Mandatory=$true)] $VDICount
@@ -121,3 +180,4 @@ Write-Host `r`n "Continual Progress Report is also being saved to" $OutFilePath 
 Log "INFO: Script started by $env:USERDOMAIN\$env:USERNAME"
 ProvisionWindows10 -VDIcount $VDICount
 Log "####################################################################################################"
+#>
