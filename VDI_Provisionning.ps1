@@ -58,12 +58,11 @@ Param(
     [Parameter(Mandatory=$true)] [string[]]$Catalog,
     [Parameter(Mandatory=$false)] [switch]$Split,
     [Parameter(Mandatory=$true)] [string]$DeliveryGroup,
-    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\VDI_Provisionning"
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\VDI_Provisionning.log"
 )
 
 #Start logging
-$date = Get-date -Format yyyy-MM-dd:HH-mm
-Start-Transcript -Path "$LogFile-$date.log"
+Start-Transcript -Path $LogFile
 
 #Setting variables prior to their usage is not mandatory
 Set-StrictMode -Version 2
@@ -224,7 +223,7 @@ foreach($cat in $Catalog){
     #We are listing those
     $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid -MaxRecordCount 10000 | Where-Object {$_.Tag -ne "Brokered"}
     Write-Host "Assigning newly created machines to $cat..."
-    Start-Sleep -Seconds 10 #Adding delay to avoid an error if next step start too soon
+    Start-Sleep -Seconds 10 #Adding delay to avoid an error if the Delivery Controller has not up-to-date info (could require a few seconds sometime)
     Foreach($VM in $ProvVMS){
         $count++
         $VMName = $VM.VMName
