@@ -47,7 +47,7 @@
  .Example
  # Provision 5 (10 split equally between two catalogs) VMs to the "DTC1" and "DTC2" catalogs, assign them 
  to the "Desktop" delivery group and log the output in C:\Temp
- VDI_Provisionning.ps1 -VDICount 10 -Catalog "DTC1","DTC2" -Split -DeliveryGroup "Desktop" -Log "C:\temp"
+ VDI_Provisionning.ps1 -VDICount 10 -Catalog "DTC1","DTC2" -Split -DeliveryGroup "Desktop" -Log "C:\temp\test.log"
 #>
 
 [CmdletBinding()]
@@ -111,12 +111,12 @@ foreach($cat in $Catalog){
     Write-Host "Checking the catalog $cat... " -NoNewline
     if(Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat -ErrorAction Ignore){
         Write-Host "OK" -ForegroundColor Green
-        Write-Host "Is it a MCS catalog? " -NoNewline
+        Write-Host "Is it an MCS catalog? " -NoNewline
         if((Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat).ProvisioningType -eq "MCS"){
             Write-host "Yes" -ForegroundColor Green
         } else {
             Write-Host "No" -ForegroundColor Red
-            Write-Host "$cat is not a MCS catalog." -ForegroundColor Red
+            Write-Host "$cat is not an MCS catalog." -ForegroundColor Red
             $errorcount++
         }
     } else {
@@ -127,7 +127,7 @@ foreach($cat in $Catalog){
 }
 #If one or more catalog(s) got an error, stop processing
 if($errorcount -ne 0){
-    Write-Host "One of the catalog does not exist or is not a MCS catalog. Please, check there is no mistype, the catalog(s) exist(s), or it is a MCS catalog before continuing." -ForegroundColor Red
+    Write-Host "One of the catalog does not exist or is not an MCS catalog. Please, check there is no mistype, the catalog(s) exist(s), or it is an MCS catalog before continuing." -ForegroundColor Red
     Stop-Transcript 
     break
 }
@@ -195,7 +195,7 @@ foreach($cat in $Catalog){
     $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool -ErrorAction Stop
     Write-Host "OK" -ForegroundColor Green
     #Creating the VM(s) using the name(s) list from the previous command
-    Write-Host "Creating the virtual machine(s)... "
+    Write-Host "Creating the virtual machine(s)... " -NoNewline
     $provTaskId = New-ProvVM -AdAccountName @($adAccounts.SuccessfulAccounts) -ProvisioningSchemeName $cat -RunAsynchronously -ErrorAction Stop
     #Display a progress bar in case of large number of VMs creation
     $provtask = Get-ProvTask -TaskId $provTaskId
