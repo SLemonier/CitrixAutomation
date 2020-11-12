@@ -68,6 +68,7 @@ Start-Transcript -Path $LogFile
 Set-StrictMode -Version 2
 
 #Check Snapin can be loaded
+#Could be improved by only loading the necessary modules but it would not be compatible with version older than 1912
 Write-Host "Loading Citrix Snapin... " -NoNewline
 if(!(Add-PSSnapin Citrix* -ErrorAction SilentlyContinue -PassThru )){
     Write-Host "Failed" -ForegroundColor Red
@@ -104,9 +105,11 @@ if(($DDC)){
 
 #Check if the catalog(s) exist(s)
 $errorcount = 0
+$catalogcount = 0
 foreach($cat in $Catalog){
+    $catalogcount++
     Write-Host "Checking the catalog $cat..." -NoNewline
-    if(Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat){
+    if(Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat -ErrorAction Ignore){
         Write-Host "OK" -ForegroundColor Green
     } else {
         Write-Host "Failed." -ForegroundColor Red
@@ -114,19 +117,44 @@ foreach($cat in $Catalog){
         $errorcount++
     }
 }
+#If one or more catalog(s) got an error, stop processing
 if($errorcount -ne 0){
-    Write-Host "One of the catalog does not exist. Please, check there is not mistype or the catalog(s) exist(s) before continuing." -ForegroundColor Red
+    Write-Host "One of the catalog does not exist. Please, check there is no mistype or the catalog(s) exist(s) before continuing." -ForegroundColor Red
     Stop-Transcript 
     break
 }
-<#
 
-#Check if the VDICount is an evennumber when -Split is set
+#Check if the VDICount can be split equally when -Split is set
 if($Split){
-    if($VDICount%2){
-        Write-Host "VDICount is not an even number. Do you want to continue and"
+    Write-Host "Checking VDICount can be split equally between the catalogs... " -NoNewline
+    if($VDICount%$catalogcount){
+        Write-Host "No" -ForegroundColor Yellow
+        while ($continue -notlike "y" -and $continue -notlike "n") {
+            $continue = Read-Host "VDICount cannot be split equally between the catalogs. Do you want to continue and split unevenly between the catalogs? Y/N"
+        }
+        if($continue -match "y"){
+            $VDICount = [math]::Floor($VDICount/$catalogcount)
+            Write-Host "$VDICount VM(s) will be created in each catalog." -ForegroundColor Yellow
+            while ($continue -notlike "y" -and $reboot -notlike "n") {
+                $continue = Read-Host "Do you want to continue? Y/N"
+            }
+            if($continue -notmatch "y"){
+                Write-Host "Execution ended by the user." -ForegroundColor Yellow
+                Stop-Transcript 
+                break
+            }
+        } else {
+            Write-Host "Execution ended by the user." -ForegroundColor Yellow
+                Stop-Transcript 
+                break
+        }
     }
 }
+
+#DELIVERYGROUP
+<#
+
+
 #>
 
 
