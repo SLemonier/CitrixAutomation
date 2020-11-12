@@ -126,6 +126,7 @@ if($errorcount -ne 0){
 
 #Check if the VDICount can be split equally when -Split is set
 if($Split){
+    $continue = ""
     Write-Host "Checking VDICount can be split equally between the catalogs... " -NoNewline
     if($VDICount%$catalogcount){
         Write-Host "No" -ForegroundColor Yellow
@@ -134,8 +135,9 @@ if($Split){
         }
         if($continue -match "y"){
             $VDICount = [math]::Floor($VDICount/$catalogcount)
-            Write-Host "$VDICount VM(s) will be created in each catalog." -ForegroundColor Yellow
-            while ($continue -notlike "y" -and $reboot -notlike "n") {
+            Write-Host "Based on the parameter and the number of catalogs, $VDICount VM(s) will be created in each catalog." -ForegroundColor Yellow
+            $continue = "" #reset continue for next question
+            while ($continue -notlike "y" -and $continue -notlike "n") {
                 $continue = Read-Host "Do you want to continue? Y/N"
             }
             if($continue -notmatch "y"){
@@ -145,11 +147,26 @@ if($Split){
             }
         } else {
             Write-Host "Execution ended by the user." -ForegroundColor Yellow
-                Stop-Transcript 
-                break
+            Stop-Transcript 
+            break
         }
+    } else {
+        Write-Host "OK" -ForegroundColor Green
     }
 }
+
+#Check if the Delivery Group exists
+Write-Host "Checking the Delivery Group $DeliveryGroup..." -NoNewline
+if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DeliveryGroup -ErrorAction Ignore){
+    Write-Host "OK" -ForegroundColor Green
+} else {
+    Write-Host "Failed." -ForegroundColor Red
+    Write-Host "Cannot find Delivery Group $cat." -ForegroundColor Red
+    Stop-Transcript 
+    break
+}
+
+
 
 #DELIVERYGROUP
 <#
