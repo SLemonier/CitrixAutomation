@@ -108,9 +108,17 @@ $errorcount = 0
 $catalogcount = 0
 foreach($cat in $Catalog){
     $catalogcount++
-    Write-Host "Checking the catalog $cat..." -NoNewline
+    Write-Host "Checking the catalog $cat... " -NoNewline
     if(Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat -ErrorAction Ignore){
         Write-Host "OK" -ForegroundColor Green
+        Write-Host "Is it a MCS catalog? " -NoNewline
+        if((Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat).ProvisioningType -eq "MCS"){
+            Write-host "Yes" -ForegroundColor Green
+        } else {
+            Write-Host "No" -ForegroundColor Red
+            Write-Host "$cat is not a MCS catalog." -ForegroundColor Red
+            $errorcount++
+        }
     } else {
         Write-Host "Failed." -ForegroundColor Red
         Write-Host "Cannot find catalog $cat." -ForegroundColor Red
@@ -119,7 +127,7 @@ foreach($cat in $Catalog){
 }
 #If one or more catalog(s) got an error, stop processing
 if($errorcount -ne 0){
-    Write-Host "One of the catalog does not exist. Please, check there is no mistype or the catalog(s) exist(s) before continuing." -ForegroundColor Red
+    Write-Host "One of the catalog does not exist. Please, check there is no mistype, the catalog(s) exist(s), or it is a MCS catalog before continuing." -ForegroundColor Red
     Stop-Transcript 
     break
 }
@@ -168,25 +176,27 @@ if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DeliveryGroup
 
 Write-Host "All the parameters were validated. Continue processing..." -ForegroundColor Green
 
-#Stop logging
-Stop-Transcript 
+#reset some variables
+$errorcount = 0
 
+################################################################################################
+#Let the fun begin
+################################################################################################
 
-
-
-
-<#
-function ProvisionWindows10 {
-    param (
-        [parameter(position=0,Mandatory=$true)] $VDICount
-    )
-    $VDICount = $VDICount / 2
-    #Provision VDI on GV1 Catalog
-    $IdentityPool = Get-AcctIdentityPool -IdentityPoolName "Windows 10 - GV1 LUN14x"
-    Log "INFO: Creating Machine Account for GV1 Pool"
-    $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool.IdentityPoolUid
-    Log "INFO: Creating the virtual machines"
-    $provTaskId = New-ProvVM -AdAccountName @($adAccounts.SuccessfulAccounts) -ProvisioningSchemeName "Windows 10 - GV1 LUN14x" -RunAsynchronously
+foreach($cat in $Catalog){
+    Write-Host "Starting provisionning in $cat" -ForegroundColor Yellow
+    #Find IdentityPool for naming convention, OU settings of the Catalog
+    Write-Host "Getting IdentityPool... " -NoNewline
+    $IdentityPool = Get-AcctIdentityPool -IdentityPoolName $cat
+    Write-Host "$IdentityPool found" -ForegroundColor Green
+    #Creating the account in AD and in the IndentityPool
+    Write-Host "Creating account(s)... " -NoNewline
+    $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool.IdentityPoolUid -ErrorAction Stop
+    Write-Host "OK" -ForegroundColor Green
+    #Creating the VM(s) using the name(s) list from the previous command
+    Write-Host "Creating the virtual machine(s)... "
+    $provTaskId = New-ProvVM -AdAccountName @($adAccounts.SuccessfulAccounts) -ProvisioningSchemeName $cat -RunAsynchronously -ErrorAction Stop
+    #Display a progress bar in case of large number of VMs creation
     $provtask = Get-ProvTask -TaskId $provTaskId
     $totalpercent = 0
     While($provtask.Active -eq $true){
@@ -199,53 +209,39 @@ function ProvisionWindows10 {
         Start-Sleep 3
         $provtask = Get-ProvTask -TaskId $provTaskId
     }
-    $ProvVMS = Get-ProvVM -ProvisioningSchemeUid "f58e430f-5760-447c-a611-4d015ffdf5f2" | Where-Object {$_.Tag -ne "Brokered"}
-    Log "INFO: Assigning machines to the Catalog"
+    Write-Host "OK" -ForegroundColor Green
+    #Get the ProvisioningSchemeUid in ordre to add the VM(s) to the catalog
+    Write-Host "Getting Provisioning Scheme Uid... " -NoNewline
+    $ProvSchemeUid = (Get-ProvScheme -ProvisioningSchemeName $cat).ProvisioningSchemeUid.Guid
+    Write-Host "$ProvSchemeUid found" -ForeGroundColor Green
+    #Finding the catalog Ui to attached the VM(s) to
+    Write-Host "Finding Catalog's UId... " -NoNewline
+    $Uid = (Get-BrokerCatalog -Name $cat).Uid
+    Write-Host "$Uid found" -ForegroundColor Green
+    #Listing the newly created VM(s) in order to add to the catalog. "Brokered" tag means the VM is created but not attached
+    #We are listing those
+    $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid | Where-Object {$_.Tag -ne "Brokered"}
+    Write-Host "Assigning newly created machines to $cat..."
     Foreach($VM in $ProvVMS){
         $VMName = $VM.VMName
-        Log "INFO: Locking VM $VMName"
-        Lock-ProvVM -ProvisioningSchemeName "Windows 10 - GV1 LUN14x" -Tag "Brokered" -VMID @($VM.VMId)
-        Log "INFO: Adding VM $VMName"
-        New-BrokerMachine -Cataloguid "174" -MachineName $VM.ADAccountName | Out-Null
-        Add-BrokerMachine -MachineName "adir\$VMName" -DesktopGroup "Windows 10"
+        #Lock the VM to indicate the VM is used (assigned to a catalog)
+        Write-Host "Locking VM $VMName... " -NoNewline
+        Lock-ProvVM -ProvisioningSchemeName $cat -Tag "Brokered" -VMID @($VM.VMId) -ErrorAction Stop
+        Write-Host "OK" -ForegroundColor Green
+        #Adding the VM to the catalog
+        Write-Host "Adding VM $VMName to $cat... " -NoNewline
+        New-BrokerMachine -Cataloguid $Uid -MachineName $VM.ADAccountName -ErrorAction Stop | Out-Null
+        Write-Host "OK" -ForegroundColor Green
+        #Adding the VM to the Delivery Group
+        Write-Host "Addind VM $VMName to $DeliveryGroup... " -NoNewline
+        Add-BrokerMachine -MachineName "$env:USERDOMAIN\$VMName" -DesktopGroup $DeliveryGroup -ErrorAction Stop 
+        Write-host "OK" -ForegroundColor Green
     }
-    Log "INFO: $VDICount VDI created in Windows 10 - GV1 LUN14x and added to Windows 10 Desktop Group"
-    #Reset variables
+    Write-Host "$VDICount VDI created in $cat and attached to $DeliveryGroup!" -ForegroundColor Green
+    #Reset variables before next loop, just in case
     $adAccounts = $null
     $ProvVMS = $null
-    #Provision VDI on GV2 Catalog
-    $IdentityPool = Get-AcctIdentityPool -IdentityPoolName "Windows 10 - GV2 LUN24x"
-    Log "INFO: Creating Machine Account for GV2 Pool"
-    $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool.IdentityPoolUid
-    Log "INFO: Creating the virtual machines"
-    $provTaskId = New-ProvVM -AdAccountName @($adAccounts.SuccessfulAccounts) -ProvisioningSchemeName "Windows 10 - GV2 LUN24x" -RunAsynchronously
-    $provtask = Get-ProvTask -TaskId $provTaskId
-    $totalpercent = 0
-    While($provtask.Active -eq $true){
-        try {
-            $totalpercent = If ($provTask.TaskProgress) {$provTask.TaskProgress} else {0}
-        }
-        catch {
-        }
-        Write-Progress -Activity "Tracking progress" -status  "$totalPercent% Complete:" -percentComplete $totalpercent
-        Start-Sleep 3
-        $provtask = Get-ProvTask -TaskId $provTaskId
-    }
-    $ProvVMS = Get-ProvVM -ProvisioningSchemeUid "85a29b0a-87fe-4066-a8b6-03c3f338c400" | Where-Object {$_.Tag -ne "Brokered"}
-    Log "INFO: Assigning machines to the Catalog"
-    Foreach($VM in $ProvVMS){
-        $VMName = $VM.VMName
-        Log "INFO Locking VM $VMName"
-        Lock-ProvVM -ProvisioningSchemeName "Windows 10 - GV2 LUN24x" -Tag "Brokered" -VMID @($VM.VMId)
-        Log "INFO: Adding VM $VMName"
-        New-BrokerMachine -Cataloguid "170" -MachineName $VM.ADAccountName | Out-Null
-        Add-BrokerMachine -MachineName "adir\$VMName" -DesktopGroup "Windows 10"
-    }
-    Log "INFO: $VDICount VDI created in Windows 10 - GV2 LUN24x and added to Windows 10 Desktop Group"
 }
 
-Write-Host `r`n "Continual Progress Report is also being saved to" $OutFilePath -BackgroundColor Yellow -ForeGroundColor DarkBlue
-Log "INFO: Script started by $env:USERDOMAIN\$env:USERNAME"
-ProvisionWindows10 -VDIcount $VDICount
-Log "####################################################################################################"
-#>
+#Stop logging
+Stop-Transcript 
