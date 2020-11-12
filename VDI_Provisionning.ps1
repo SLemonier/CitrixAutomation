@@ -231,17 +231,14 @@ foreach($cat in $Catalog){
         Write-Host "Locking VM $VMName... " -NoNewline
         Lock-ProvVM -ProvisioningSchemeName $cat -Tag "Brokered" -VMID @($VM.VMId) -ErrorAction Stop
         Write-Host "OK" -ForegroundColor Green
-        Start-Sleep -Seconds 1 #Some issue if no delay before next step
         #Adding the VM to the catalog
         Write-Host "Adding VM $VMName to $cat catalog... " -NoNewline
-        New-BrokerMachine -Cataloguid $Uid -MachineName $VM.ADAccountName -ErrorAction Stop | Out-Null
+        New-BrokerMachine -Cataloguid $Uid -MachineName $VMName -ErrorAction Stop | Out-Null
         Write-Host "OK" -ForegroundColor Green
-        Start-Sleep -Seconds 1 #Some issue if no delay before next step
         #Adding the VM to the Delivery Group
-        Write-Host "Addind VM $VMName to $DeliveryGroup delivery group... " -NoNewline
+        Write-Host "Adding VM $VMName to $DeliveryGroup delivery group... " -NoNewline
         Add-BrokerMachine -MachineName "$env:USERDOMAIN\$VMName" -DesktopGroup $DeliveryGroup -ErrorAction Stop 
         Write-host "OK" -ForegroundColor Green
-        Start-Sleep -Seconds 1 #Some issue if no delay before next step
     }
     Write-Host "$count VDI created in $cat and attached to $DeliveryGroup!" -ForegroundColor Green
     #Reset variables before next loop, just in case
