@@ -71,20 +71,22 @@ Set-StrictMode -Version 2
 Write-Host "Loading Citrix Snapin... " -NoNewline
 if(!(Add-PSSnapin Citrix* -ErrorAction SilentlyContinue -PassThru )){
     Write-Host "Failed" -ForegroundColor Red
-    Write-Host "Citrix Snapin cannot be loaded. Pleaase, check the component is installed on the computer." -ForegroundColor Red
+    Write-Host "Citrix Snapin cannot be loaded. Please, check the component is installed on the computer." -ForegroundColor Red
     #Stop logging
     Stop-Transcript 
     break
 }
 Write-Host "OK" -ForegroundColor Green
 
+################################################################################################
 #Checking the parameters
+################################################################################################
 
-#Check if the parameter is set or if it has to use the local machine
+#Check if the DeliveryController parameter is set or if it has to use the local machine
 if($DeliveryController){
     #Check if the parameter is a FQDN or not
     Write-Host "Trying to contact the Delivery Controller $DeliveryController... " -NoNewline
-    if($DeliveryController -match "."){
+    if($DeliveryController -contains "."){
         $DDC = Get-BrokerController -DNSName "$DeliveryController"
     } else {
         $DDC = Get-BrokerController -DNSName "$DeliveryController.$env:USERDNSDOMAIN"
@@ -97,8 +99,36 @@ if(($DDC)){
     Write-Host "OK" -ForegroundColor Green
 } else {
     Write-Host "Failed" -ForegroundColor Red
-    Write-Host "Cannot contact the Delivery Controller. Check the role is installed on the target computer and your account is allowed to communicate with it."
+    Write-Host "Cannot contact the Delivery Controller. Please, check the role is installed on the target computer and your account is allowed to communicate with it." -ForegroundColor Red
 }
+
+#Check if the catalog(s) exist(s)
+$errorcount = 0
+foreach($cat in $Catalog){
+    Write-Host "Checking the catalog $cat..." -NoNewline
+    if(Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat){
+        Write-Host "OK" -ForegroundColor Green
+    } else {
+        Write-Host "Failed." -ForegroundColor Red
+        Write-Host "Cannot find catalog $cat." -ForegroundColor Red
+        $errorcount++
+    }
+}
+if($errorcount -ne 0){
+    Write-Host "One of the catalog does not exist. Please, check there is not mistype or the catalog(s) exist(s) before continuing." -ForegroundColor Red
+    Stop-Transcript 
+    break
+}
+<#
+
+#Check if the VDICount is an evennumber when -Split is set
+if($Split){
+    if($VDICount%2){
+        Write-Host "VDICount is not an even number. Do you want to continue and"
+    }
+}
+#>
+
 
 #Stop logging
 Stop-Transcript 
