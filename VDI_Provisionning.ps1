@@ -161,19 +161,12 @@ if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DeliveryGroup
     Write-Host "OK" -ForegroundColor Green
 } else {
     Write-Host "Failed." -ForegroundColor Red
-    Write-Host "Cannot find Delivery Group $cat." -ForegroundColor Red
+    Write-Host "Cannot find Delivery Group $DeliveryGroup." -ForegroundColor Red
     Stop-Transcript 
     break
 }
 
-
-
-#DELIVERYGROUP
-<#
-
-
-#>
-
+Write-Host "All the parameters were validated. Continue processing..." -ForegroundColor Green
 
 #Stop logging
 Stop-Transcript 
