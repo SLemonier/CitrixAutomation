@@ -1,8 +1,9 @@
 <#
 
 
-
-
+$XMLDocument = [XML](Get-Content .\export.xml)
+PS C:\Users\sleadm\Desktop> foreach($role in $roles.childnodes){write-host $role.name; foreach($permission in $role.perm
+ission){write-host "permission: " $permission}}
 
 
 
@@ -130,11 +131,10 @@ if(Test-Path -Path $ExportFile){
         try {
             Remove-Item -Path $ExportFile -Force | Out-Null
             [xml]$Doc = New-Object System.Xml.XmlDocument
-            $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
+            $Doc.CreateXmlDeclaration("1.0","UTF-8",$null) | Out-Null
             $oXMLRoot=$Doc.CreateElement("site")
-            $Doc.AppendChild($oXMLRoot)
-            $doc.save("$ExportFile")
-            Write-Host "XML file successfully created" -ForegroundColor Green
+            $Doc.AppendChild($oXMLRoot) | Out-Null
+            Write-Host "OK" -ForegroundColor Green
         }
         catch {
             Write-Host "An error occured while deleting existing file" -ForegroundColor Red
@@ -148,159 +148,148 @@ if(Test-Path -Path $ExportFile){
     }
 } else {
     [xml]$Doc = New-Object System.Xml.XmlDocument
-    $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
+    $Doc.CreateXmlDeclaration("1.0","UTF-8",$null) | Out-Null
     $oXMLRoot=$Doc.CreateElement("site")
-    $Doc.AppendChild($oXMLRoot)
-    $doc.save("$ExportFile")
-    Write-Host "XML file successfully created" -ForegroundColor Green
+    $Doc.AppendChild($oXMLRoot) | Out-Null
+    Write-Host "OK" -ForegroundColor Green
 }
 
+################################################################################################
+#Enumerating Site's Tags
+################################################################################################
+
+Write-Host "Enumerating Site's Tags... " -NoNewline
+try {
+    $oXMLTags = $oXMLRoot.appendChild($Doc.CreateElement("Tags"))
+    $tags = Get-BrokerTag
+    foreach ($Tag in $Tags) {
+        $oxmlTag = $oXMLTags.appendChild($Doc.CreateElement("Tag"))
+        $oxmltagName = $oXMLTag.appendChild($Doc.CreateElement("Name"))
+        $oxmltagName.InnerText = $Tag.Name
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Site's tags" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
+#Enumerating Site's Administrators
+################################################################################################
+
+Write-Host "Enumerating Roles config... " -NoNewline
+try {
+    $oXMLRoles = $oXMLRoot.appendChild($Doc.CreateElement("Roles"))
+    $Roles = get-adminRole
+    foreach ($Role in $Roles) {
+        $oxmlRole = $oXMLRoles.appendChild($Doc.CreateElement("Role"))
+        $oxmlrolename = $oxmlRole.appendChild($Doc.CreateElement("Name"))
+        $oxmlrolename.InnerText = $Role.Name
+        $permissions = $Role.Permissions
+        foreach ($permission in $permissions){
+            $oxmlrolepermission = $oxmlrole.appendChild($Doc.CreateElement("Permission"))
+            $oxmlrolepermission.InnerText = $permission
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Roles config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+Write-Host "Enumerating Scopes config... " -NoNewline
+try {
+    $oXMLScopes = $oXMLRoot.appendChild($Doc.CreateElement("Scopes"))
+    $scopes = get-adminscope
+    foreach ($scope in $scopes) {
+        $oxmlscope = $oXMLscopes.appendChild($Doc.CreateElement("Scope"))
+        $oxmlscopename = $oxmlscope.appendChild($Doc.CreateElement("Name"))
+        $oxmlscopename.InnerText = $scope.Name
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Scopes config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+Write-Host "Enumerating Administrators config... " -NoNewline
+try {
+    $oXMLadmins = $oXMLRoot.appendChild($Doc.CreateElement("Administrators"))
+    $admins = get-adminadministrator
+    foreach ($admin in $admins) {
+        $oxmladmin = $oXMLadmins.appendChild($Doc.CreateElement("Administrator"))
+        $oxmladminname = $oxmladmin.appendChild($Doc.CreateElement("Name"))
+        $oxmladminname.InnerText = $admin.Name
+        $oxmladminEnabled = $oxmladmin.appendChild($Doc.CreateElement("Enabled"))
+        $oxmladminEnabled.InnerText = $admin.Enabled
+        $oxmladminrolename = $oxmladmin.appendChild($Doc.CreateElement("RoleName"))
+        $oxmladminrolename.InnerText = $admin.Rights.RoleName
+        $oxmladminScopeName = $oxmladmin.appendChild($Doc.CreateElement("ScopeName"))
+        $oxmladminScopeName.InnerText = $admin.Rights.ScopeName
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Administrators config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
+#Enumerating Catalogs
+################################################################################################
+
+Write-Host "Enumerating Catalogs config... " -NoNewline
+try {
+    $oXMLCatalogs = $oXMLRoot.appendChild($Doc.CreateElement("Catalogs"))
+    $Catalogs = Get-BrokerCatalog
+    foreach ($Catalog in $Catalogs) {
+        $oxmlCatalog = $oXMLCatalogs.appendChild($Doc.CreateElement("Catalog"))
+        $oxmlCatalogname = $oxmlCatalog.appendChild($Doc.CreateElement("Name"))
+        $oxmlCatalogname.InnerText = $Catalog.Name
+        $oxmlCatalogDescription = $oxmlCatalog.appendChild($Doc.CreateElement("Description"))
+        $oxmlCatalogDescription.InnerText = $Catalog.Description
+        $oxmlCatalogAllocationType = $oxmlCatalog.appendChild($Doc.CreateElement("AllocationType"))
+        $oxmlCatalogAllocationType.InnerText = $Catalog.AllocationType
+        $oxmlCatalogProvisioningType = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningType"))
+        $oxmlCatalogProvisioningType.InnerText = $Catalog.ProvisioningType
+        $oxmlCatalogSessionSupport = $oxmlCatalog.appendChild($Doc.CreateElement("SessionSupport"))
+        $oxmlCatalogSessionSupport.InnerText = $Catalog.SessionSupport
+        $oxmlCatalogPersistUserChanges = $oxmlCatalog.appendChild($Doc.CreateElement("PersistUserChanges"))
+        $oxmlCatalogPersistUserChanges.InnerText = $Catalog.PersistUserChanges
+        $oxmlCatalogIsRemotePC = $oxmlCatalog.appendChild($Doc.CreateElement("IsRemotePC"))
+        $oxmlCatalogIsRemotePC.InnerText = $Catalog.IsRemotePC
+        $oxmlCatalogMachinesArePhysical = $oxmlCatalog.appendChild($Doc.CreateElement("MachinesArePhysical"))
+        $oxmlCatalogMachinesArePhysical.InnerText = $Catalog.MachinesArePhysical
+        $oxmlCatalogProvisioningSchemeId = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeId"))
+        $oxmlCatalogProvisioningSchemeId.InnerText = $Catalog.ProvisioningSchemeId
+        $oxmlCatalogHypervisorConnectionUid = $oxmlCatalog.appendChild($Doc.CreateElement("HypervisorConnectionUid"))
+        $oxmlCatalogHypervisorConnectionUid.InnerText = $Catalog.HypervisorConnectionUid
+        $scopes = $Catalog.Scopes
+        foreach ($scope in $scopes){
+            $oxmlCatalogscope = $oxmlCatalog.appendChild($Doc.CreateElement("scope"))
+            $oxmlCatalogscope.InnerText = $permission
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Catalogs config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+
+
+
+
+
+$doc.save("$ExportFile")
 Stop-Transcript
 break
-
-#Check if the catalog(s) exist(s)
-$errorcount = 0
-$catalogcount = 0
-foreach($cat in $Catalog){
-    $catalogcount++
-    Write-Host "Checking the catalog $cat... " -NoNewline
-    if(Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat -ErrorAction Ignore){
-        Write-Host "OK" -ForegroundColor Green
-        Write-Host "Is it an MCS catalog? " -NoNewline
-        if((Get-BrokerCatalog -AdminAddress $DeliveryController -Name $cat).ProvisioningType -eq "MCS"){
-            Write-host "Yes" -ForegroundColor Green
-        } else {
-            Write-Host "No" -ForegroundColor Red
-            Write-Host "$cat is not an MCS catalog." -ForegroundColor Red
-            $errorcount++
-        }
-    } else {
-        Write-Host "Failed." -ForegroundColor Red
-        Write-Host "Cannot find catalog $cat." -ForegroundColor Red
-        $errorcount++
-    }
-}
-#If one or more catalog(s) got an error, stop processing
-if($errorcount -ne 0){
-    Write-Host "One of the catalog does not exist or is not an MCS catalog. Please, check there is no mistype, the catalog(s) exist(s), or it is an MCS catalog before continuing." -ForegroundColor Red
-    Stop-Transcript 
-    break
-}
-
-#Check if the VDICount can be split equally when -Split is set
-if($Split){
-    $continue = ""
-    Write-Host "Checking VDICount can be split equally between the catalogs... " -NoNewline
-    if($VDICount%$catalogcount){
-        Write-Host "No" -ForegroundColor Yellow
-        while ($continue -notlike "y" -and $continue -notlike "n") {
-            $continue = Read-Host "VDICount cannot be split equally between the catalogs. Do you want to continue and split unevenly between the catalogs? Y/N"
-        }
-        if($continue -match "y"){
-            $VDICount = [math]::Floor($VDICount/$catalogcount)
-            Write-Host "Based on the parameter and the number of catalogs, $VDICount VM(s) will be created in each catalog." -ForegroundColor Yellow
-            $continue = "" #reset continue for next question
-            while ($continue -notlike "y" -and $continue -notlike "n") {
-                $continue = Read-Host "Do you want to continue? Y/N"
-            }
-            if($continue -notmatch "y"){
-                Write-Host "Execution ended by the user." -ForegroundColor Yellow
-                Stop-Transcript 
-                break
-            }
-        } else {
-            Write-Host "Execution ended by the user." -ForegroundColor Yellow
-            Stop-Transcript 
-            break
-        }
-    } else {
-        Write-Host "OK" -ForegroundColor Green
-    }
-}
-
-#Check if the Delivery Group exists
-Write-Host "Checking the Delivery Group $DeliveryGroup..." -NoNewline
-if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DeliveryGroup -ErrorAction Ignore){
-    Write-Host "OK" -ForegroundColor Green
-} else {
-    Write-Host "Failed." -ForegroundColor Red
-    Write-Host "Cannot find Delivery Group $DeliveryGroup." -ForegroundColor Red
-    Stop-Transcript 
-    break
-}
-
-Write-Host "All the parameters were validated. Continue processing..." -ForegroundColor Green
-
-#reset some variables
-$errorcount = 0
-$count = 0
-
-################################################################################################
-#Let the fun begin
-################################################################################################
-
-foreach($cat in $Catalog){
-    Write-Host "Starting provisionning of $VDICount VM(s) in $cat" -ForegroundColor Yellow
-    #Find IdentityPool for naming convention, OU settings of the Catalog
-    Write-Host "Getting IdentityPool... " -NoNewline
-    $IdentityPool = (Get-AcctIdentityPool -IdentityPoolName $cat).IdentityPoolUid.Guid
-    Write-Host "$IdentityPool found" -ForegroundColor Green
-    #Creating the account in AD and in the IndentityPool
-    Write-Host "Creating account(s)... " -NoNewline
-    $adAccounts = New-AcctADAccount -Count $VDICount -IdentityPoolUid $IdentityPool -ErrorAction Stop
-    Write-Host "OK" -ForegroundColor Green
-    #Creating the VM(s) using the name(s) list from the previous command
-    Write-Host "Creating the virtual machine(s)... " -NoNewline
-    $provTaskId = New-ProvVM -AdAccountName @($adAccounts.SuccessfulAccounts) -ProvisioningSchemeName $cat -RunAsynchronously -ErrorAction Stop
-    #Display a progress bar in case of large number of VMs creation
-    $provtask = Get-ProvTask -TaskId $provTaskId
-    $totalpercent = 0
-    While($provtask.Active -eq $true){
-        try {
-            $totalpercent = If ($provTask.TaskProgress) {$provTask.TaskProgress} else {0}
-        }
-        catch {
-        }
-        Write-Progress -Activity "Tracking progress" -status  "$totalPercent% Complete:" -percentComplete $totalpercent
-        Start-Sleep 3
-        $provtask = Get-ProvTask -TaskId $provTaskId
-    }
-    Write-Host "OK" -ForegroundColor Green
-    #Get the ProvisioningSchemeUid in ordre to add the VM(s) to the catalog
-    Write-Host "Getting Provisioning Scheme Uid... " -NoNewline
-    $ProvSchemeUid = (Get-ProvScheme -ProvisioningSchemeName $cat).ProvisioningSchemeUid.Guid
-    Write-Host "$ProvSchemeUid found" -ForeGroundColor Green
-    #Finding the catalog Ui to attached the VM(s) to
-    Write-Host "Finding Catalog's UId... " -NoNewline
-    $Uid = (Get-BrokerCatalog -Name $cat).Uid
-    Write-Host "$Uid found" -ForegroundColor Green
-    #Listing the newly created VM(s) in order to add to the catalog. "Brokered" tag means the VM is created but not attached
-    #We are listing those
-    $ProvVMS = Get-ProvVM -ProvisioningSchemeUid $ProvSchemeUid -MaxRecordCount 10000 | Where-Object {$_.Tag -ne "Brokered"}
-    Write-Host "Assigning newly created machines to $cat..."
-    Start-Sleep -Seconds 10 #Adding delay to avoid an error if the Delivery Controller has not up-to-date info (could require a few seconds sometime)
-    Foreach($VM in $ProvVMS){
-        $count++
-        $VMName = $VM.VMName
-        #Lock the VM to indicate the VM is used (assigned to a catalog)
-        Write-Host "Locking VM $VMName... " -NoNewline
-        Lock-ProvVM -ProvisioningSchemeName $cat -Tag "Brokered" -VMID @($VM.VMId) -ErrorAction Stop
-        Write-Host "OK" -ForegroundColor Green
-        #Adding the VM to the catalog
-        Write-Host "Adding VM $VMName to $cat catalog... " -NoNewline
-        New-BrokerMachine -Cataloguid $Uid -MachineName $VMName -ErrorAction Stop | Out-Null
-        Write-Host "OK" -ForegroundColor Green
-        #Adding the VM to the Delivery Group
-        Write-Host "Adding VM $VMName to $DeliveryGroup delivery group... " -NoNewline
-        Add-BrokerMachine -MachineName "$env:USERDOMAIN\$VMName" -DesktopGroup $DeliveryGroup -ErrorAction Stop 
-        Write-host "OK" -ForegroundColor Green
-    }
-    Write-Host "$count VDI created in $cat and attached to $DeliveryGroup!" -ForegroundColor Green
-    #Reset variables before next loop, just in case
-    $adAccounts = $null
-    $ProvVMS = $null
-    $count = $null
-}
-
-#Stop logging
-Stop-Transcript 
