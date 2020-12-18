@@ -117,6 +117,11 @@ if(($DDC)){
 
 #Check if export file already exists
 Write-Host "Creating XML file... " -NoNewline
+#Fixing path to save XML if $ExportFile is not set
+If($ExportFile -like "./"){
+    $XMLPath = (Get-Location).Path
+    $ExportFile = "$XMLPath\$ExportFile"
+}
 if(Test-Path -Path $ExportFile){
     Write-Host "File already exists" -ForegroundColor Yellow
     while ($overwrite -notlike "y" -and $continue -notlike "n") {
@@ -129,7 +134,7 @@ if(Test-Path -Path $ExportFile){
             $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
             $oXMLRoot=$Doc.CreateElement("site")
             $Doc.AppendChild($oXMLRoot)
-            $doc.save($ExportFile)
+            $doc.save("$ExportFile")
             Write-Host "XML file successfully created" -ForegroundColor Green
         }
         catch {
@@ -147,7 +152,7 @@ if(Test-Path -Path $ExportFile){
     $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
     $oXMLRoot=$Doc.CreateElement("site")
     $Doc.AppendChild($oXMLRoot)
-    $doc.save($ExportFile)
+    $doc.save("$ExportFile")
     Write-Host "XML file successfully created" -ForegroundColor Green
 }
 
