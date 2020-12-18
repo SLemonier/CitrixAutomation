@@ -124,6 +124,7 @@ If($ExportFile -like "./"){
 }
 if(Test-Path -Path $ExportFile){
     Write-Host "File already exists" -ForegroundColor Yellow
+    $overwrite = $null
     while ($overwrite -notlike "y" -and $continue -notlike "n") {
         $overwrite = Read-Host "Do you want to overwrite existing file? Y/N"
     }
