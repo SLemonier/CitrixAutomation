@@ -126,6 +126,9 @@ if(Test-Path -Path $ExportFile){
         try {
             Remove-Item -Path $ExportFile -Force | Out-Null
             [xml]$Doc = New-Object System.Xml.XmlDocument
+            $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
+            $oXMLRoot=$Doc.CreateElement("site")
+            $Doc.AppendChild($oXMLRoot)
             $doc.save($ExportFile)
             Write-Host "XML file successfully created" -ForegroundColor Green
         }
@@ -141,6 +144,9 @@ if(Test-Path -Path $ExportFile){
     }
 } else {
     [xml]$Doc = New-Object System.Xml.XmlDocument
+    $Doc.CreateXmlDeclaration("1.0","UTF-8",$null)
+    $oXMLRoot=$Doc.CreateElement("site")
+    $Doc.AppendChild($oXMLRoot)
     $doc.save($ExportFile)
     Write-Host "XML file successfully created" -ForegroundColor Green
 }
