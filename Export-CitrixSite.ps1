@@ -68,7 +68,7 @@
 [CmdletBinding()]
 Param(
     # Declaring input variables for the script
-    [Parameter(Mandatory=$false)] [string]$ExportFile=".\export.xml",
+    [Parameter(Mandatory=$false)] [string]$ExportFile,
     [Parameter(Mandatory=$false)] [string]$DeliveryController,
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\Export-CitrixSite.log"
 )
@@ -118,7 +118,7 @@ if(($DDC)){
 #Check if export file already exists
 Write-Host "Creating XML file... " -NoNewline
 #Fixing path to save XML if $ExportFile is not set
-If($ExportFile -like "./"){
+If($ExportFile -eq $null){
     $XMLPath = (Get-Location).Path
     $ExportFile = "$XMLPath\$ExportFile"
 }
