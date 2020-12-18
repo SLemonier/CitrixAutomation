@@ -120,7 +120,7 @@ Write-Host "Creating XML file... " -NoNewline
 #Fixing path to save XML if $ExportFile is not set
 If($ExportFile -eq $null){
     $XMLPath = (Get-Location).Path
-    $ExportFile = "$XMLPath\$ExportFile"
+    $ExportFile = "$XMLPath\export.xml"
 }
 if(Test-Path -Path $ExportFile){
     Write-Host "File already exists" -ForegroundColor Yellow
