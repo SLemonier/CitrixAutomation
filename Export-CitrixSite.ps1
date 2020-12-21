@@ -156,11 +156,30 @@ if(Test-Path -Path $ExportFile){
 
 #Check if resources folder exists (to store icon)
 if(Test-Path -path "./resources"){
-    Remove-item -Path "./resources" -Force | Out-Null
+    Remove-item -Path "./resources" -Force -Recurse | Out-Null
     New-Item -Name "resources" -ItemType Directory | Out-Null
 } else {
     New-Item -Name "resources" -ItemType Directory | Out-Null
 }
+
+################################################################################################
+#Enumerating Site's Properties
+################################################################################################
+
+Write-Host "Enumerating Site's Properties... " -NoNewline
+try {
+    $oXMLProperties = $oXMLRoot.appendChild($Doc.CreateElement("Properties"))
+    $Site = Get-Site
+    $oxmlTrustXML = $oXMLProperties.appendChild($Doc.CreateElement("TrustXML"))
+    $oxmltagName = $oxmlTrustXML.appendChild($Doc.CreateElement("Enabled"))
+    $oxmltagName.InnerText = $Site.TrustRequestsSentToTheXmlServicePort
+}
+catch {
+    Write-Host "An error occured while enumerating Site's Properties" -ForegroundColor Red
+    Stop-Transcript
+    break
+}
+Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
 #Enumerating Site's Tags
@@ -452,7 +471,7 @@ try {
         $oxmlPublishedAppWorkingDirectory.InnerText = $PublishedApp.WorkingDirectory
         $oxmlPublishedAppPublishedName = $oxmlPublishedApp.appendChild($Doc.CreateElement("PublishedName"))
         $oxmlPublishedAppPublishedName.InnerText = $PublishedApp.PublishedName
-        $oxmlPublishedAppIconUid = $oxmlPublishedAppIconUid.appendChild($Doc.CreateElement("IconUid"))
+        $oxmlPublishedAppIconUid = $oxmlPublishedApp.appendChild($Doc.CreateElement("IconUid"))
         $oxmlPublishedAppIconUid.InnerText = $PublishedApp.IconUid
         $iconUid = $PublishedApp.IconUid
         if(!(test-path -Path "./resources/$iconuid.txt")){
