@@ -169,7 +169,7 @@ if(Test-Path -path "./resources"){
 Write-Host "Enumerating Site's Properties... " -NoNewline
 try {
     $oXMLProperties = $oXMLRoot.appendChild($Doc.CreateElement("Properties"))
-    $Site = Get-Site
+    $Site = Get-BrokerSite
     $oxmlTrustXML = $oXMLProperties.appendChild($Doc.CreateElement("TrustXML"))
     $oxmltagName = $oxmlTrustXML.appendChild($Doc.CreateElement("Enabled"))
     $oxmltagName.InnerText = $Site.TrustRequestsSentToTheXmlServicePort
