@@ -295,8 +295,8 @@ try {
     $ProvSchemes = Get-ProvScheme
     foreach ($ProvScheme in $ProvSchemes) {
         $oxmlProvScheme = $oXMLProvSchemes.appendChild($Doc.CreateElement("ProvScheme"))
-        $oxmlProvSchemeProvisionSchemeName = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisionSchemeName"))
-        $oxmlProvSchemeProvisionSchemeName.InnerText = $ProvScheme.ProvisionSchemeName
+        $oxmlProvSchemeProvisioningSchemeName = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisioningSchemeName"))
+        $oxmlProvSchemeProvisioningSchemeName.InnerText = $ProvScheme.ProvisioningSchemeName
         $oxmlProvSchemeProvisionSchemeUid = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisionSchemeUid"))
         $oxmlProvSchemeProvisionSchemeUid.InnerText = $ProvScheme.ProvisionSchemeUid
         $oxmlProvSchemeHostingUnitName = $oxmlProvScheme.appendChild($Doc.CreateElement("HostingUnitName"))
