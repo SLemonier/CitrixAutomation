@@ -72,7 +72,7 @@ Param(
     [Parameter(Mandatory=$false)] [string]$XMLFile,
     [Parameter(Mandatory=$false)] [string]$ResourcesFolder,
     [Parameter(Mandatory=$false)] [string]$DeliveryController,
-    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\Export-CitrixSite.log"
+    [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\Import-CitrixSite.log"
 )
 
 #Start logging
@@ -148,7 +148,7 @@ if(Test-Path -path $ResourcesFolder){
 ################################################################################################
 #Setting Site's Properties
 ################################################################################################
-
+write-host $XMLFile.site.Properties.TrustXML
 if($XMLFile.site.Properties.TrustXML){
     Write-Host "Setting Site's TrustXML Property... " -NoNewline
     try {
