@@ -124,10 +124,7 @@ if(($DDC)){
 Write-Host "Checking XML file... " -NoNewline
 Try{
     #TODO improve check (google to check XML)
-    #$XMLFile = [XML](Get-Content $XMLFile)
-    $xdoc = New-Object System.Xml.XmlDocument
-    $file = Resolve-Path($XMLFile)
-    $xdoc.load($file)
+    $XMLFile = [XML](Get-Content $XMLFile)
 }
 catch{
     Write-Host "An error occured while importing XML file" -ForegroundColor Red
@@ -151,12 +148,10 @@ if(Test-Path -path $ResourcesFolder){
 ################################################################################################
 #Setting Site's Properties
 ################################################################################################
-write-host $xdoc
-write-host $xdoc.site.Properties.TrustXML
-if($doc.site.Properties.TrustXML){
+if($XMLFile.site.Properties.TrustXML.InnerText){
     Write-Host "Setting Site's TrustXML Property... " -NoNewline
     try {
-        Set-BrokerSite -TrustRequestsSentToTheXmlServicePort $xdoc.site.Properties.TrustXML
+        Set-BrokerSite -TrustRequestsSentToTheXmlServicePort [bool]$XMLFile.site.Properties.TrustXML.InnerText
     }
     catch {
         Write-Host "An error occured while setting Site's TrustXML Property" -ForegroundColor Red
