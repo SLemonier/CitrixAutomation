@@ -1,7 +1,7 @@
 <#
 
 
-
+$XMLDocument = [XML](Get-Content .\export.xml)
 PS C:\Users\sleadm\Desktop> foreach($role in $roles.childnodes){write-host $role.name; foreach($permission in $role.perm
 ission){write-host "permission: " $permission}}
 
@@ -69,6 +69,8 @@ ission){write-host "permission: " $permission}}
 [CmdletBinding()]
 Param(
     # Declaring input variables for the script
+    [Parameter(Mandatory=$false)] [string]$XMLFile,
+    [Parameter(Mandatory=$false)] [string]$ResourcesFolder,
     [Parameter(Mandatory=$false)] [string]$DeliveryController,
     [Parameter(Mandatory=$false)][ValidateNotNullOrEmpty()] [string]$LogFile=".\Export-CitrixSite.log"
 )
@@ -115,52 +117,34 @@ if(($DDC)){
     Write-Host "Cannot contact the Delivery Controller. Please, check the role is installed on the target computer and your account is allowed to communicate with it." -ForegroundColor Red
 }
 
-#Check if export file already exists
-Write-Host "Creating XML file... " -NoNewline
-#Fixing path to save XML if $ExportFile is not set
-$XMLPath = (Get-Location).Path
-$ExportFile = "$XMLPath\export.xml"
+#TODO Check if current DDC = DDC in the XML
+#WARN about lauching the script on the same DDC as the one in export file!
 
-if(Test-Path -Path $ExportFile){
-    Write-Host "File already exists" -ForegroundColor Yellow
-    $overwrite = $null
-    while ($overwrite -notlike "y" -and $overwrite -notlike "n") {
-        $overwrite = Read-Host "Do you want to overwrite existing file? Y/N"
-    }
-    if($overwrite -like "y"){
-        try {
-            Remove-Item -Path $ExportFile -Force | Out-Null
-            [xml]$Doc = New-Object System.Xml.XmlDocument
-            $Doc.CreateXmlDeclaration("1.0","UTF-8",$null) | Out-Null
-            $oXMLRoot=$Doc.CreateElement("site")
-            $Doc.AppendChild($oXMLRoot) | Out-Null
-            Write-Host "OK" -ForegroundColor Green
-        }
-        catch {
-            Write-Host "An error occured while deleting existing file" -ForegroundColor Red
-            Stop-Transcript
-            break
-        }
-    } else {
-        Write-Host "Chose another file name to export the configuration" -ForegroundColor Yellow
-        Stop-Transcript
-        break
-    }
-} else {
-    [xml]$Doc = New-Object System.Xml.XmlDocument
-    $Doc.CreateXmlDeclaration("1.0","UTF-8",$null) | Out-Null
-    $oXMLRoot=$Doc.CreateElement("site")
-    $Doc.AppendChild($oXMLRoot) | Out-Null
+#Check if export file exists
+Write-Host "Checking XML file... " -NoNewline
+Try{
+    $XMLDocument = [XML](Get-Content .\export.xml)
+}
+catch{
+    Write-Host "An error occured while importing XML file" -ForegroundColor Red
+    Stop-Transcript
+    break
+}
+Write-Host "OK" -ForegroundColor Green
+
+
+#Check if resources folder exists (to import icon)
+Write-Host "Checking resources folder... " -NoNewline
+if(Test-Path -path $ResourcesFolder){
     Write-Host "OK" -ForegroundColor Green
+} else {
+    Write-Host "An error occured while checking resources folder. Ensure the path is correct." -ForegroundColor Red
+    Stop-Transcript
+    break
 }
 
-#Check if resources folder exists (to store icon)
-if(Test-Path -path "./resources"){
-    Remove-item -Path "./resources" -Force -Recurse | Out-Null
-    New-Item -Name "resources" -ItemType Directory | Out-Null
-} else {
-    New-Item -Name "resources" -ItemType Directory | Out-Null
-}
+Stop-Transcript
+break
 
 ################################################################################################
 #Enumerating Site's Properties
@@ -170,8 +154,6 @@ Write-Host "Enumerating Site's Properties... " -NoNewline
 try {
     $oXMLProperties = $oXMLRoot.appendChild($Doc.CreateElement("Properties"))
     $Site = Get-BrokerSite
-    $oxmlDDC = $oXMLProperties.appendChild($Doc.CreateElement("DDC"))
-    $oxmlDDC.InnerText = $DDC
     $oxmlTrustXML = $oXMLProperties.appendChild($Doc.CreateElement("TrustXML"))
     $oxmltagName = $oxmlTrustXML.appendChild($Doc.CreateElement("Enabled"))
     $oxmltagName.InnerText = $Site.TrustRequestsSentToTheXmlServicePort
