@@ -150,10 +150,11 @@ if(Test-Path -path $ResourcesFolder){
 ################################################################################################
 #Setting Site's Properties
 ################################################################################################
-if($xdoc.site.Properties.TrustXML){
+if($xdoc.site.Properties.TrustXML.InnerText){
     Write-Host "Setting Site's TrustXML Property... " -NoNewline
     try {
-        Set-BrokerSite -TrustRequestsSentToTheXmlServicePort [bool]$xdoc.site.Properties.TrustXML
+        $value = [bool]$xdoc.site.Properties.TrustXML.InnerText
+        Set-BrokerSite -TrustRequestsSentToTheXmlServicePort $value
     }
     catch {
         Write-Host "An error occured while setting Site's TrustXML Property" -ForegroundColor Red
