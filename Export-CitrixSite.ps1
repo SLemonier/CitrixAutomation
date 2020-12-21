@@ -297,8 +297,8 @@ try {
         $oxmlProvScheme = $oXMLProvSchemes.appendChild($Doc.CreateElement("ProvScheme"))
         $oxmlProvSchemeProvisioningSchemeName = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisioningSchemeName"))
         $oxmlProvSchemeProvisioningSchemeName.InnerText = $ProvScheme.ProvisioningSchemeName
-        $oxmlProvSchemeProvisionSchemeUid = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisionSchemeUid"))
-        $oxmlProvSchemeProvisionSchemeUid.InnerText = $ProvScheme.ProvisionSchemeUid
+        $oxmlProvSchemeProvisionSchemeUid = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisioningSchemeUid"))
+        $oxmlProvSchemeProvisionSchemeUid.InnerText = $ProvScheme.ProvisioningSchemeUid
         $oxmlProvSchemeHostingUnitName = $oxmlProvScheme.appendChild($Doc.CreateElement("HostingUnitName"))
         $oxmlProvSchemeHostingUnitName.InnerText = $ProvScheme.HostingUnitName
         $oxmlProvSchemeMasterImageVM = $oxmlProvScheme.appendChild($Doc.CreateElement("MasterImageVM"))
@@ -309,10 +309,12 @@ try {
         $oxmlProvSchemeCpuCount.InnerText = $ProvScheme.CpuCount
         $oxmlProvSchemeMemoryMB = $oxmlProvScheme.appendChild($Doc.CreateElement("MemoryMB"))
         $oxmlProvSchemeMemoryMB.InnerText = $ProvScheme.MemoryMB
+        $oxmlProvSchemeDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("DiskSize"))
+        $oxmlProvSchemeDiskSize.InnerText = $ProvScheme.DiskSize
         $oxmlProvSchemeCleanOnBoot = $oxmlProvScheme.appendChild($Doc.CreateElement("CleanOnBoot"))
         $oxmlProvSchemeCleanOnBoot.InnerText = $ProvScheme.CleanOnBoot
-        $oxmlProvSchemeUsePersonnalVDiskStorage = $oxmlProvScheme.appendChild($Doc.CreateElement("UsePersonnalVDiskStorage"))
-        $oxmlProvSchemeUsePersonnalVDiskStorage.InnerText = $ProvScheme.UsePersonnalVDiskStorage
+        $oxmlProvSchemeUsePersonnalVDiskStorage = $oxmlProvScheme.appendChild($Doc.CreateElement("UsePersonalVDiskStorage"))
+        $oxmlProvSchemeUsePersonnalVDiskStorage.InnerText = $ProvScheme.UsePersonalVDiskStorage
         $oxmlProvSchemeUseWriteBackCache = $oxmlProvScheme.appendChild($Doc.CreateElement("UseWriteBackCache"))
         $oxmlProvSchemeUseWriteBackCache.InnerText = $ProvScheme.UseWriteBackCache
         $oxmlProvSchemeWriteBackCacheDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskSize"))
@@ -421,7 +423,7 @@ Write-Host "OK" -ForegroundColor Green
 Write-Host "Enumerating Published Apps config... " -NoNewline
 try {
     $oXMLPublishedApps = $oXMLRoot.appendChild($Doc.CreateElement("PublishedApps"))
-    $PublishedApps = Get-BrokerDesktopGroup
+    $PublishedApps = Get-Application
     foreach ($PublishedApp in $PublishedApps) {
         $oxmlPublishedApp = $oXMLPublishedApps.appendChild($Doc.CreateElement("PublishedApp"))
         $oxmlPublishedAppname = $oxmlPublishedApp.appendChild($Doc.CreateElement("Name"))
@@ -442,15 +444,15 @@ try {
         $oxmlPublishedAppApplicationName.InnerText = $PublishedApp.ApplicationName
         $oxmlPublishedAppApplicationType = $oxmlPublishedApp.appendChild($Doc.CreateElement("ApplicationType"))
         $oxmlPublishedAppApplicationType.InnerText = $PublishedApp.ApplicationType
-        $AssociatedDesktopGroupUids = $DeliveryGroup.AssociatedDesktopGroupUids
+        $AssociatedDesktopGroupUids = $PublishedApp.AssociatedDesktopGroupUids
         foreach ($AssociatedDesktopGroupUid in $AssociatedDesktopGroupUids){
-            $oxmlDeliveryGroupAssociatedDesktopGroupUid = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AssociatedDesktopGroupUid"))
-            $oxmlDeliveryGroupAssociatedDesktopGroupUid.InnerText = $AssociatedDesktopGroupUid
+            $oxmlPublishedAppAssociatedDesktopGroupUid = $oxmlPublishedApp.appendChild($Doc.CreateElement("AssociatedDesktopGroupUid"))
+            $oxmlPublishedAppAssociatedDesktopGroupUid.InnerText = $AssociatedDesktopGroupUid
         }
-        $AssociatedUserFullNames = $DeliveryGroup.AssociatedUserFullNames
+        $AssociatedUserFullNames = $PublishedApp.AssociatedUserFullNames
         foreach ($AssociatedUserFullName in $AssociatedUserFullNames){
-            $oxmlDeliveryGroupAssociatedUserFullName = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AssociatedUserFullName"))
-            $oxmlDeliveryGroupAssociatedUserFullName.InnerText = $AssociatedUserFullName
+            $oxmlPublishedAppAssociatedUserFullName = $oxmlPublishedApp.appendChild($Doc.CreateElement("AssociatedUserFullName"))
+            $oxmlPublishedAppAssociatedUserFullName.InnerText = $AssociatedUserFullName
         }
         $oxmlPublishedAppEnabled = $oxmlPublishedApp.appendChild($Doc.CreateElement("Enabled"))
         $oxmlPublishedAppEnabled.InnerText = $PublishedApp.Enabled
