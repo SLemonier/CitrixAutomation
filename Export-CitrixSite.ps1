@@ -16,7 +16,7 @@ ission){write-host "permission: " $permission}}
 
 
  .Synopsis
- Provision a given number of VM(s) in one or more MCS catalog(s) and assign the VM(s) to a delivery group.
+ Provision a given number of VM(s) in one or more MCS DeliveryGroup(s) and assign the VM(s) to a delivery group.
 
  .Description
  Provision a given number of VM(s).
@@ -274,7 +274,7 @@ try {
         $scopes = $Catalog.Scopes
         foreach ($scope in $scopes){
             $oxmlCatalogscope = $oxmlCatalog.appendChild($Doc.CreateElement("scope"))
-            $oxmlCatalogscope.InnerText = $permission
+            $oxmlCatalogscope.InnerText = $scope
         }
     }
 }
@@ -285,9 +285,197 @@ catch {
 } 
 Write-Host "OK" -ForegroundColor Green
 
+################################################################################################
+#Enumerating ProvSchemes
+################################################################################################
 
+Write-Host "Enumerating ProvSchemes config... " -NoNewline
+try {
+    $oXMLProvSchemes = $oXMLRoot.appendChild($Doc.CreateElement("ProvSchemes"))
+    $ProvSchemes = Get-ProvScheme
+    foreach ($ProvScheme in $ProvSchemes) {
+        $oxmlProvScheme = $oXMLProvSchemes.appendChild($Doc.CreateElement("ProvScheme"))
+        $oxmlProvSchemeProvisionSchemeName = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisionSchemeName"))
+        $oxmlProvSchemeProvisionSchemeName.InnerText = $ProvScheme.ProvisionSchemeName
+        $oxmlProvSchemeProvisionSchemeUid = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisionSchemeUid"))
+        $oxmlProvSchemeProvisionSchemeUid.InnerText = $ProvScheme.ProvisionSchemeUid
+        $oxmlProvSchemeHostingUnitName = $oxmlProvScheme.appendChild($Doc.CreateElement("HostingUnitName"))
+        $oxmlProvSchemeHostingUnitName.InnerText = $ProvScheme.HostingUnitName
+        $oxmlProvSchemeMasterImageVM = $oxmlProvScheme.appendChild($Doc.CreateElement("MasterImageVM"))
+        $oxmlProvSchemeMasterImageVM.InnerText = $ProvScheme.MasterImageVM
+        $oxmlProvSchemeIdentityPoolName = $oxmlProvScheme.appendChild($Doc.CreateElement("IdentityPoolName"))
+        $oxmlProvSchemeIdentityPoolName.InnerText = $ProvScheme.IdentityPoolName
+        $oxmlProvSchemeCpuCount = $oxmlProvScheme.appendChild($Doc.CreateElement("CpuCount"))
+        $oxmlProvSchemeCpuCount.InnerText = $ProvScheme.CpuCount
+        $oxmlProvSchemeMemoryMB = $oxmlProvScheme.appendChild($Doc.CreateElement("MemoryMB"))
+        $oxmlProvSchemeMemoryMB.InnerText = $ProvScheme.MemoryMB
+        $oxmlProvSchemeCleanOnBoot = $oxmlProvScheme.appendChild($Doc.CreateElement("CleanOnBoot"))
+        $oxmlProvSchemeCleanOnBoot.InnerText = $ProvScheme.CleanOnBoot
+        $oxmlProvSchemeUsePersonnalVDiskStorage = $oxmlProvScheme.appendChild($Doc.CreateElement("UsePersonnalVDiskStorage"))
+        $oxmlProvSchemeUsePersonnalVDiskStorage.InnerText = $ProvScheme.UsePersonnalVDiskStorage
+        $oxmlProvSchemeUseWriteBackCache = $oxmlProvScheme.appendChild($Doc.CreateElement("UseWriteBackCache"))
+        $oxmlProvSchemeUseWriteBackCache.InnerText = $ProvScheme.UseWriteBackCache
+        $oxmlProvSchemeWriteBackCacheDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskSize"))
+        $oxmlProvSchemeWriteBackCacheDiskSize.InnerText = $ProvScheme.WriteBackCacheDiskSize
+        $oxmlProvSchemeWriteBackCacheMemorySize = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheMemorySize"))
+        $oxmlProvSchemeWriteBackCacheMemorySize.InnerText = $ProvScheme.WriteBackCacheMemorySize
+        $oxmlProvSchemeWriteBackCacheDiskIndex = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskIndex"))
+        $oxmlProvSchemeWriteBackCacheDiskIndex.InnerText = $ProvScheme.WriteBackCacheDiskIndex
+        $scopes = $ProvScheme.Scopes
+        foreach ($scope in $scopes){
+            $oxmlProvSchemescope = $oxmlProvScheme.appendChild($Doc.CreateElement("scope"))
+            $oxmlProvSchemescope.InnerText = $scope
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating ProvSchemes config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
 
+################################################################################################
+#Enumerating DeliveryGroups
+################################################################################################
 
+Write-Host "Enumerating Delivery Groups config... " -NoNewline
+try {
+    $oXMLDeliveryGroups = $oXMLRoot.appendChild($Doc.CreateElement("DeliveryGroups"))
+    $DeliveryGroups = Get-BrokerDesktopGroup
+    foreach ($DeliveryGroup in $DeliveryGroups) {
+        $oxmlDeliveryGroup = $oXMLDeliveryGroups.appendChild($Doc.CreateElement("DeliveryGroup"))
+        $oxmlDeliveryGroupname = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Name"))
+        $oxmlDeliveryGroupname.InnerText = $DeliveryGroup.Name
+        $oxmlDeliveryGroupPublishedName = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PublishedName"))
+        $oxmlDeliveryGroupPublishedName.InnerText = $DeliveryGroup.PublishedName
+        $oxmlDeliveryGroupDescription = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Description"))
+        $oxmlDeliveryGroupDescription.InnerText = $DeliveryGroup.Description
+        $oxmlDeliveryGroupDeliveryType = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("DeliveryType"))
+        $oxmlDeliveryGroupDeliveryType.InnerText = $DeliveryGroup.DeliveryType
+        $oxmlDeliveryGroupDesktopKind = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("DesktopKind"))
+        $oxmlDeliveryGroupDesktopKind.InnerText = $DeliveryGroup.DesktopKind
+        $oxmlDeliveryGroupEnabled = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Enabled"))
+        $oxmlDeliveryGroupEnabled.InnerText = $DeliveryGroup.Enabled
+        $oxmlDeliveryGroupAutomaticPowerOnForAssigned = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AutomaticPowerOnForAssigned"))
+        $oxmlDeliveryGroupAutomaticPowerOnForAssigned.InnerText = $DeliveryGroup.AutomaticPowerOnForAssigned
+        $oxmlDeliveryGroupAutomaticPowerOnForAssignedDuringPeak = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AutomaticPowerOnForAssignedDuringPeak"))
+        $oxmlDeliveryGroupAutomaticPowerOnForAssignedDuringPeak.InnerText = $DeliveryGroup.AutomaticPowerOnForAssignedDuringPeak
+        $oxmlDeliveryGroupIsRemotePC = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("IsRemotePC"))
+        $oxmlDeliveryGroupIsRemotePC.InnerText = $DeliveryGroup.IsRemotePC
+        $oxmlDeliveryGroupOffPeakBufferSizePercent = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakBufferSizePercent"))
+        $oxmlDeliveryGroupOffPeakBufferSizePercent.InnerText = $DeliveryGroup.OffPeakBufferSizePercent
+        $oxmlDeliveryGroupOffPeakDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakDisconnectAction"))
+        $oxmlDeliveryGroupOffPeakDisconnectAction.InnerText = $DeliveryGroup.OffPeakDisconnectAction
+        $oxmlDeliveryGroupOffPeakDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakDisconnectTimeout"))
+        $oxmlDeliveryGroupOffPeakDisconnectTimeout.InnerText = $DeliveryGroup.OffPeakDisconnectTimeout
+        $oxmlDeliveryGroupOffPeakExtendedDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakExtendedDisconnectAction"))
+        $oxmlDeliveryGroupOffPeakExtendedDisconnectAction.InnerText = $DeliveryGroup.OffPeakExtendedDisconnectAction
+        $oxmlDeliveryGroupOffPeakExtendedDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakExtendedDisconnectTimeout"))
+        $oxmlDeliveryGroupOffPeakExtendedDisconnectTimeout.InnerText = $DeliveryGroup.OffPeakExtendedDisconnectTimeout
+        $oxmlDeliveryGroupOffPeakLogOffAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakLogOffAction"))
+        $oxmlDeliveryGroupOffPeakLogOffAction.InnerText = $DeliveryGroup.OffPeakLogOffAction
+        $oxmlDeliveryGroupOffPeakLogOffTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakLogOffTimeout"))
+        $oxmlDeliveryGroupOffPeakLogOffTimeout.InnerText = $DeliveryGroup.OffPeakLogOffTimeout
+        $oxmlDeliveryGroupPeakBufferSizePercent = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakBufferSizePercent"))
+        $oxmlDeliveryGroupPeakBufferSizePercent.InnerText = $DeliveryGroup.PeakBufferSizePercent
+        $oxmlDeliveryGroupPeakDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakDisconnectAction"))
+        $oxmlDeliveryGroupPeakDisconnectAction.InnerText = $DeliveryGroup.PeakDisconnectAction
+        $oxmlDeliveryGroupPeakDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakDisconnectTimeout"))
+        $oxmlDeliveryGroupPeakDisconnectTimeout.InnerText = $DeliveryGroup.PeakDisconnectTimeout
+        $oxmlDeliveryGroupPeakExtendedDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakExtendedDisconnectAction"))
+        $oxmlDeliveryGroupPeakExtendedDisconnectAction.InnerText = $DeliveryGroup.PeakExtendedDisconnectAction
+        $oxmlDeliveryGroupPeakExtendedDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakExtendedDisconnectTimeout"))
+        $oxmlDeliveryGroupPeakExtendedDisconnectTimeout.InnerText = $DeliveryGroup.PeakExtendedDisconnectTimeout
+        $oxmlDeliveryGroupPeakLogOffAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakLogOffAction"))
+        $oxmlDeliveryGroupPeakLogOffAction.InnerText = $DeliveryGroup.PeakLogOffAction
+        $oxmlDeliveryGroupPeakLogOffTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakLogOffTimeout"))
+        $oxmlDeliveryGroupPeakLogOffTimeout.InnerText = $DeliveryGroup.PeakLogOffTimeout
+        $scopes = $DeliveryGroup.Scopes
+        foreach ($scope in $scopes){
+            $oxmlDeliveryGroupscope = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("scope"))
+            $oxmlDeliveryGroupscope.InnerText = $scope
+        }
+        $oxmlDeliveryGroupSessionSupport = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("SessionSupport"))
+        $oxmlDeliveryGroupSessionSupport.InnerText = $DeliveryGroup.SessionSupport
+        $oxmlDeliveryGroupShutdownDesktopsAfterUse = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("ShutdownDesktopsAfterUse"))
+        $oxmlDeliveryGroupShutdownDesktopsAfterUse.InnerText = $DeliveryGroup.ShutdownDesktopsAfterUse
+        $Tags = $DeliveryGroup.Tags
+        foreach ($Tag in $Tags){
+            $oxmlDeliveryGroupTag = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Tag"))
+            $oxmlDeliveryGroupTag.InnerText = $tag
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Delivery Groups config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
+#Enumerating PublishedApps
+################################################################################################
+
+Write-Host "Enumerating Published Apps config... " -NoNewline
+try {
+    $oXMLPublishedApps = $oXMLRoot.appendChild($Doc.CreateElement("PublishedApps"))
+    $PublishedApps = Get-BrokerDesktopGroup
+    foreach ($PublishedApp in $PublishedApps) {
+        $oxmlPublishedApp = $oXMLPublishedApps.appendChild($Doc.CreateElement("PublishedApp"))
+        $oxmlPublishedAppname = $oxmlPublishedApp.appendChild($Doc.CreateElement("Name"))
+        $oxmlPublishedAppname.InnerText = $PublishedApp.Name
+        $oxmlPublishedAppDescription = $oxmlPublishedApp.appendChild($Doc.CreateElement("Description"))
+        $oxmlPublishedAppDescription.InnerText = $PublishedApp.Description
+        $oxmlPublishedAppCommandLineExecutable = $oxmlPublishedApp.appendChild($Doc.CreateElement("CommandLineExecutable"))
+        $oxmlPublishedAppCommandLineExecutable.InnerText = $PublishedApp.CommandLineExecutable
+        $oxmlPublishedAppCommandLineArguments = $oxmlPublishedApp.appendChild($Doc.CreateElement("CommandLineArguments"))
+        $oxmlPublishedAppCommandLineArguments.InnerText = $PublishedApp.CommandLineArguments
+        $oxmlPublishedAppWorkingDirectory = $oxmlPublishedApp.appendChild($Doc.CreateElement("WorkingDirectory"))
+        $oxmlPublishedAppWorkingDirectory.InnerText = $PublishedApp.WorkingDirectory
+        $oxmlPublishedAppPublishedName = $oxmlPublishedApp.appendChild($Doc.CreateElement("PublishedName"))
+        $oxmlPublishedAppPublishedName.InnerText = $PublishedApp.PublishedName
+        $oxmlPublishedAppAdminFolderName = $oxmlPublishedApp.appendChild($Doc.CreateElement("AdminFolderName"))
+        $oxmlPublishedAppAdminFolderName.InnerText = $PublishedApp.AdminFolderName
+        $oxmlPublishedAppApplicationName = $oxmlPublishedApp.appendChild($Doc.CreateElement("ApplicationName"))
+        $oxmlPublishedAppApplicationName.InnerText = $PublishedApp.ApplicationName
+        $oxmlPublishedAppApplicationType = $oxmlPublishedApp.appendChild($Doc.CreateElement("ApplicationType"))
+        $oxmlPublishedAppApplicationType.InnerText = $PublishedApp.ApplicationType
+        $AssociatedDesktopGroupUids = $DeliveryGroup.AssociatedDesktopGroupUids
+        foreach ($AssociatedDesktopGroupUid in $AssociatedDesktopGroupUids){
+            $oxmlDeliveryGroupAssociatedDesktopGroupUid = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AssociatedDesktopGroupUid"))
+            $oxmlDeliveryGroupAssociatedDesktopGroupUid.InnerText = $AssociatedDesktopGroupUid
+        }
+        $AssociatedUserFullNames = $DeliveryGroup.AssociatedUserFullNames
+        foreach ($AssociatedUserFullName in $AssociatedUserFullNames){
+            $oxmlDeliveryGroupAssociatedUserFullName = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AssociatedUserFullName"))
+            $oxmlDeliveryGroupAssociatedUserFullName.InnerText = $AssociatedUserFullName
+        }
+        $oxmlPublishedAppEnabled = $oxmlPublishedApp.appendChild($Doc.CreateElement("Enabled"))
+        $oxmlPublishedAppEnabled.InnerText = $PublishedApp.Enabled
+        $oxmlPublishedAppMaxPerUserInstances = $oxmlPublishedApp.appendChild($Doc.CreateElement("MaxPerUserInstances"))
+        $oxmlPublishedAppMaxPerUserInstances.InnerText = $PublishedApp.MaxPerUserInstances
+        $oxmlPublishedAppMaxTotalInstances = $oxmlPublishedApp.appendChild($Doc.CreateElement("MaxTotalInstances"))
+        $oxmlPublishedAppMaxTotalInstances.InnerText = $PublishedApp.MaxTotalInstances
+        $oxmlPublishedAppShortcutAddedToDesktop = $oxmlPublishedApp.appendChild($Doc.CreateElement("ShortcutAddedToDesktop"))
+        $oxmlPublishedAppShortcutAddedToDesktop.InnerText = $PublishedApp.ShortcutAddedToDesktop
+        $oxmlPublishedAppShortcutAddedToStartMenu = $oxmlPublishedApp.appendChild($Doc.CreateElement("ShortcutAddedToStartMenu"))
+        $oxmlPublishedAppShortcutAddedToStartMenu.InnerText = $PublishedApp.ShortcutAddedToStartMenu
+        $oxmlPublishedAppStartMenuFolder = $oxmlPublishedApp.appendChild($Doc.CreateElement("StartMenuFolder"))
+        $oxmlPublishedAppStartMenuFolder.InnerText = $PublishedApp.StartMenuFolder
+        $oxmlPublishedAppUserFilterEnabled = $oxmlPublishedApp.appendChild($Doc.CreateElement("UserFilterEnabled"))
+        $oxmlPublishedAppUserFilterEnabled.InnerText = $PublishedApp.UserFilterEnabled
+        $oxmlPublishedAppVisible = $oxmlPublishedApp.appendChild($Doc.CreateElement("Visible"))
+        $oxmlPublishedAppVisible.InnerText = $PublishedApp.Visible
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Published Apps config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
 
 
 $doc.save("$ExportFile")
