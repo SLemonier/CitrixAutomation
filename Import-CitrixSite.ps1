@@ -123,7 +123,8 @@ if(($DDC)){
 #Check if export file exists
 Write-Host "Checking XML file... " -NoNewline
 Try{
-    $XMLDocument = [XML](Get-Content .\export.xml)
+    #TODO improve check (google to check XML)
+    $XMLFile = [XML](Get-Content $XMLFile)
 }
 catch{
     Write-Host "An error occured while importing XML file" -ForegroundColor Red
@@ -135,6 +136,7 @@ Write-Host "OK" -ForegroundColor Green
 
 #Check if resources folder exists (to import icon)
 Write-Host "Checking resources folder... " -NoNewline
+#TODO improve check (uid.txt as childitem)
 if(Test-Path -path $ResourcesFolder){
     Write-Host "OK" -ForegroundColor Green
 } else {
@@ -143,27 +145,25 @@ if(Test-Path -path $ResourcesFolder){
     break
 }
 
+################################################################################################
+#Setting Site's Properties
+################################################################################################
+
+if($XMLFile.site.Properties.TrustXML){
+    Write-Host "Setting Site's TrustXML Property... " -NoNewline
+    try {
+        Set-BrokerSite -TrustRequestsSentToTheXmlServicePort $XMLFile.site.Properties.TrustXML
+    }
+    catch {
+        Write-Host "An error occured while setting Site's TrustXML Property" -ForegroundColor Red
+        Stop-Transcript
+        break
+    }
+    Write-Host "OK" -ForegroundColor Green
+}
+
 Stop-Transcript
 break
-
-################################################################################################
-#Enumerating Site's Properties
-################################################################################################
-
-Write-Host "Enumerating Site's Properties... " -NoNewline
-try {
-    $oXMLProperties = $oXMLRoot.appendChild($Doc.CreateElement("Properties"))
-    $Site = Get-BrokerSite
-    $oxmlTrustXML = $oXMLProperties.appendChild($Doc.CreateElement("TrustXML"))
-    $oxmltagName = $oxmlTrustXML.appendChild($Doc.CreateElement("Enabled"))
-    $oxmltagName.InnerText = $Site.TrustRequestsSentToTheXmlServicePort
-}
-catch {
-    Write-Host "An error occured while enumerating Site's Properties" -ForegroundColor Red
-    Stop-Transcript
-    break
-}
-Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
 #Enumerating Site's Tags

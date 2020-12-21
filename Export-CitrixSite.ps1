@@ -107,6 +107,7 @@ if($DeliveryController){
 } else {
     Write-Host "Trying to contact the Delivery Controller $env:COMPUTERNAME... " -NoNewline
     $DDC = Get-BrokerController -DNSName "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
+    $DeliveryController = "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
 }
 if(($DDC)){
     Write-Host "OK" -ForegroundColor Green
@@ -171,7 +172,7 @@ try {
     $oXMLProperties = $oXMLRoot.appendChild($Doc.CreateElement("Properties"))
     $Site = Get-BrokerSite
     $oxmlDDC = $oXMLProperties.appendChild($Doc.CreateElement("DDC"))
-    $oxmlDDC.InnerText = $DDC
+    $oxmlDDC.InnerText = $DeliveryController
     $oxmlTrustXML = $oXMLProperties.appendChild($Doc.CreateElement("TrustXML"))
     $oxmltagName = $oxmlTrustXML.appendChild($Doc.CreateElement("Enabled"))
     $oxmltagName.InnerText = $Site.TrustRequestsSentToTheXmlServicePort
