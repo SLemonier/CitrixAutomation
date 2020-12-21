@@ -154,6 +154,14 @@ if(Test-Path -Path $ExportFile){
     Write-Host "OK" -ForegroundColor Green
 }
 
+#Check if resources folder exists (to store icon)
+if(Test-Path -path "./resources"){
+    Remove-item -Path "./resources" -Force | Out-Null
+    New-Item -Name "resources" -ItemType Directory | Out-Null
+} else {
+    New-Item -Name "resources" -ItemType Directory | Out-Null
+}
+
 ################################################################################################
 #Enumerating Site's Tags
 ################################################################################################
@@ -355,6 +363,12 @@ try {
         $oxmlDeliveryGroupDescription.InnerText = $DeliveryGroup.Description
         $oxmlDeliveryGroupDeliveryType = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("DeliveryType"))
         $oxmlDeliveryGroupDeliveryType.InnerText = $DeliveryGroup.DeliveryType
+        $oxmlDeliveryGroupIconUid = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("IconUid"))
+        $oxmlDeliveryGroupIconUid.InnerText = $DeliveryGroup.IconUid
+        $iconUid = $DeliveryGroup.IconUid
+        if(!(test-path -Path "./resources/$iconuid.txt")){
+            (Get-BrokerIcon -Uid $iconUid).EncodedIconData | Out-File "./resources/$iconuid.txt"
+        }
         $oxmlDeliveryGroupDesktopKind = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("DesktopKind"))
         $oxmlDeliveryGroupDesktopKind.InnerText = $DeliveryGroup.DesktopKind
         $oxmlDeliveryGroupEnabled = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Enabled"))
@@ -423,7 +437,7 @@ Write-Host "OK" -ForegroundColor Green
 Write-Host "Enumerating Published Apps config... " -NoNewline
 try {
     $oXMLPublishedApps = $oXMLRoot.appendChild($Doc.CreateElement("PublishedApps"))
-    $PublishedApps = Get-Application
+    $PublishedApps = Get-BrokerApplication
     foreach ($PublishedApp in $PublishedApps) {
         $oxmlPublishedApp = $oXMLPublishedApps.appendChild($Doc.CreateElement("PublishedApp"))
         $oxmlPublishedAppname = $oxmlPublishedApp.appendChild($Doc.CreateElement("Name"))
@@ -438,6 +452,12 @@ try {
         $oxmlPublishedAppWorkingDirectory.InnerText = $PublishedApp.WorkingDirectory
         $oxmlPublishedAppPublishedName = $oxmlPublishedApp.appendChild($Doc.CreateElement("PublishedName"))
         $oxmlPublishedAppPublishedName.InnerText = $PublishedApp.PublishedName
+        $oxmlPublishedAppIconUid = $oxmlPublishedAppIconUid.appendChild($Doc.CreateElement("IconUid"))
+        $oxmlPublishedAppIconUid.InnerText = $PublishedApp.IconUid
+        $iconUid = $PublishedApp.IconUid
+        if(!(test-path -Path "./resources/$iconuid.txt")){
+            (Get-BrokerIcon -Uid $iconUid).EncodedIconData | Out-File "./resources/$iconuid.txt"
+        }
         $oxmlPublishedAppAdminFolderName = $oxmlPublishedApp.appendChild($Doc.CreateElement("AdminFolderName"))
         $oxmlPublishedAppAdminFolderName.InnerText = $PublishedApp.AdminFolderName
         $oxmlPublishedAppApplicationName = $oxmlPublishedApp.appendChild($Doc.CreateElement("ApplicationName"))
