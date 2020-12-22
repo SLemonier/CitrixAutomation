@@ -292,65 +292,60 @@ if($xdoc.site.administrators){
 #Setting AcctIdentityPool
 ################################################################################################
 
-
 Write-Host "Setting AcctIdentityPool config... "
 if($xdoc.site.AcctIdentityPools){
     $AcctIdentityPools = $xdoc.site.AcctIdentityPools.AcctIdentityPool
     foreach($AcctIdentityPool in $AcctIdentityPools){
         if(!(get-AcctIdentityPool -IdentityPoolName $AcctIdentityPool.IdentityPoolName -errorAction SilentlyContinue)){
             Write-host "Adding new AcctIdentityPool" $AcctIdentityPool.IdentityPoolName"... " -NoNewline
-            #try {
-                $Command = "New-AcctIdentityPool -IdentityPoolName """ + $AcctIdentityPool.IdentityPoolName + """"
-                $command += " -NamingScheme """ + $AcctIdentityPool.NamingScheme  + """"
-                $command += " -NamingSchemeType """ + $AcctIdentityPool.NamingSchemeType + """"
-                $command += " -OU """+ $AcctIdentityPool.OU + """"
-                $command += " -Domain """+ $AcctIdentityPool.Domain + """"
-                try {
-                    $count = $AcctIdentityPool.scope.count | Out-Null
-                    $i=0
-                    if($count -eq 1){
-                        $command += " -Scope """ + $AcctIdentityPool.scope + """"
-                    } else {
-                        $command += " -Scope """
-                        while ($i -lt $count) {
-                            $i++
-                            $command += $AcctIdentityPool.scope[$i] + """"
-                            if($i -ne ($count - 1)){
-                                $command += ","
-                            }
+            $Command = "New-AcctIdentityPool -IdentityPoolName """ + $AcctIdentityPool.IdentityPoolName + """"
+            $command += " -NamingScheme """ + $AcctIdentityPool.NamingScheme  + """"
+            $command += " -NamingSchemeType """ + $AcctIdentityPool.NamingSchemeType + """"
+            $command += " -OU """+ $AcctIdentityPool.OU + """"
+            $command += " -Domain """+ $AcctIdentityPool.Domain + """"
+            try {
+                $count = $AcctIdentityPool.scope.count
+                $i=0
+                if($count -eq 1){
+                    $command += " -Scope """ + $AcctIdentityPool.scope + """"
+                } else {
+                    $command += " -Scope """
+                    while ($i -lt $count) {
+                        $command += $AcctIdentityPool.scope[$i] 
+                        if($i -ne ($count - 1)){
+                            $command += ","
+                        } else {
+                            $command += """"
                         }
+                        $i++
                     }
                 }
-                catch {
-                    #No Scope to assign
-                }
-                write-host $command
-                Pause
-                Invoke-Expression $command
-                Write-Host "OK" -ForegroundColor Green
-            <#}
+            }
             catch {
-                Write-Host "An error occured while adding a new ProvScheme" -ForegroundColor Red
+                #No Scope to assign
+            }
+            #write-host $command
+            #Pause
+            try {
+                Invoke-Expression $command | Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new IdentityPoolName" -ForegroundColor Red
                 Stop-Transcript
                 break
-            }#>
+            }
+            Write-Host "OK" -ForegroundColor Green
         } else {
             Write-Host $AcctIdentityPool.IdentityPoolName "already exists. IdentityPoolName won't be modified by this script." -ForegroundColor Yellow
             Write-Host "Check manually IdentityPoolName's properties." -ForegroundColor Yellow
         }
-        Pause
     }
 } else {
-    Write-Host "No AcctIdentityPool to import" -ForegroundColor Yellow
+    Write-Host "No AcctIdentityPools to import" -ForegroundColor Yellow
 }
 
-
-
-Stop-Transcript
-break
-
 ################################################################################################
-#Enumerating ProvSchemes
+#Setting ProvSchemes
 ################################################################################################
 
 
@@ -360,51 +355,69 @@ if($xdoc.site.provschemes){
     foreach($provscheme in $provschemes){
         if(!(get-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName -errorAction SilentlyContinue)){
             Write-host "Adding new ProvScheme" $provscheme.ProvisioningSchemeName"... " -NoNewline
-            #try {
-                New-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName `
-                    -HostingUnitName $provscheme.HostingUnitName `
-                    -IdentityPoolName $provscheme.IdentityPoolName `
-                    -CleanOnBoot $provscheme.CleanOnBoot `
-                    -MasterImageVM $provscheme.MasterImageVM `
-                    -VMCpuCount  $provscheme.CpuCount `
-                    -VMMemoryMB $provscheme.MemoryMB `
-                    -UsePersonalVDiskStorage $provscheme.UsePersonalVDiskStorage `
-                    -UseWriteBackCache $ProvScheme.UseWriteBackCache `
-                    -WriteBackCacheDiskSize $provscheme.WriteBackCacheDiskSize `
-                    -WriteBackCacheMemorySize $provscheme.WriteBackCacheMemorySize
-                try {
-                    $count = $provscheme.scope.count | Out-Null
-                    $i=0
-                    if($count -eq 1){
-                        #No index to referer to when ProvScheme has only one scope assigned
-                        Get-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName | Add-ProvSchemeScope -scope $provscheme.scope
-                    } else {
-                        while ($i -lt $count) {
-                            $i++
-                            Get-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName | Add-ProvSchemeScope -scope $provscheme.scope[$i]
+            $command = "New-ProvScheme -ProvisioningSchemeName """ + $provscheme.ProvisioningSchemeName + """"
+            $command += " -HostingUnitName """ + $provscheme.HostingUnitName + """"
+            $command += " -IdentityPoolName """ + $provscheme.IdentityPoolName + """"
+            if($provscheme.CleanOnBoot){
+                $command += " -CleanOnBoot"
+            }
+            $command += " -MasterImageVM """ + $provscheme.MasterImageVM + """"
+            $command += " -VMCpuCount """ +  $provscheme.CpuCount + """"
+            $command += " -VMMemoryMB """ + $provscheme.MemoryMB + """"
+            if($provscheme.UsePersonalVDiskStorage){
+                $command += " -UsePersonalVDiskStorage"
+            }
+            if($ProvScheme.UseWriteBackCache){
+                $command += " -UseWriteBackCache"
+                $command += " -WriteBackCacheDiskSize """ + $provscheme.WriteBackCacheDiskSize + """"
+                $command += " -WriteBackCacheMemorySize """ + $provscheme.WriteBackCacheMemorySize + """"
+            }
+            try {
+                $count = $provscheme.scope.count
+                $i=0
+                if($count -eq 1){
+                    $command += " -Scope """ + $provscheme.scope + """"
+                } else {
+                    $command += " -Scope """
+                    while ($i -lt $count) {
+                        $command += $provscheme.scope[$i] 
+                        if($i -ne ($count - 1)){
+                            $command += ","
+                        } else {
+                            $command += """"
                         }
+                        $i++
                     }
                 }
-                catch {
-                    #No Scope to assign
-                }
-                Write-Host "OK" -ForegroundColor Green
-
-            <#}
+            }
             catch {
-                Write-Host "An error occured while adding a new ProvScheme" -ForegroundColor Red
+                #No Scope to assign
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command | Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new ProvSchemes" -ForegroundColor Red
                 Stop-Transcript
                 break
-            }#>
+            }
+            Write-Host "OK" -ForegroundColor Green
         } else {
-            Write-Host $provscheme.ProvisioningSchemeName "already exists. ProvScheme won't be modified by this script." -ForegroundColor Yellow
-            Write-Host "Check manually ProvScheme's properties." -ForegroundColor Yellow
+            Write-Host $provscheme.ProvisioningSchemeName "already exists. ProvSchemes won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually ProvSchemes's properties." -ForegroundColor Yellow
         }
         Pause
     }
 } else {
     Write-Host "No ProvSchemes to import" -ForegroundColor Yellow
 }
+
+Stop-Transcript
+break
+
+
 
 
 
