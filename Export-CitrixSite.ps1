@@ -372,6 +372,42 @@ catch {
 Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
+#Enumerating AcctIdentityPool
+################################################################################################
+
+Write-Host "Enumerating AcctIdentityPool config... " -NoNewline
+try {
+    $oXMLAcctIdentityPools = $oXMLRoot.appendChild($Doc.CreateElement("AcctIdentityPools"))
+    $AcctIdentityPools = Get-AcctIdentityPool
+    foreach ($AcctIdentityPool in $AcctIdentityPools) {
+        $oxmloXMLAcctIdentityPool= $oXMLAcctIdentityPools.appendChild($Doc.CreateElement("AcctIdentityPool"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolName = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("IdentityPoolName"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolName.InnerText = $AcctIdentityPool.IdentityPoolName
+        $oxmloXMLAcctIdentityPoolIdentityPoolUid = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("IdentityPoolUid"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolUid.InnerText = $AcctIdentityPool.IdentityPoolUid
+        $oxmloXMLAcctIdentityPoolIdentityPoolDomain = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("Domain"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolDomain.InnerText = $AcctIdentityPool.Domain
+        $oxmloXMLAcctIdentityPoolIdentityPoolNamingScheme = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("NamingScheme"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolNamingScheme.InnerText = $AcctIdentityPool.NamingScheme
+        $oxmloXMLAcctIdentityPoolIdentityPoolNamingSchemeType = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("NamingSchemeType"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolNamingSchemeType.InnerText = $AcctIdentityPool.NamingSchemeType
+        $oxmloXMLAcctIdentityPoolIdentityPoolOU = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("OU"))
+        $oxmloXMLAcctIdentityPoolIdentityPoolOU.InnerText = $AcctIdentityPool.OU
+        $scopes = $AcctIdentityPools.Scopes
+        foreach ($scope in $scopes){
+            $oxmloXMLAcctIdentityPoolscope = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("scope"))
+            $oxmloXMLAcctIdentityPoolscope.InnerText = $scope.scopeName
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating AcctIdentityPool config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
 #Enumerating DeliveryGroups
 ################################################################################################
 
