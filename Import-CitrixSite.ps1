@@ -196,33 +196,58 @@ if($xdoc.site.Roles){
     $roles = $xdoc.site.roles.role
     foreach($role in $roles){
         if(!(Get-AdminRole -Name $role.Name -errorAction SilentlyContinue)){
-            Write-host "Adding new admin " $role.Name "... " -NoNewline
+            Write-host "Adding new role" $role.Name"... " -NoNewline
             try {
                 New-AdminRole -Name $role.Name -description $role.description | out-null
                 Write-Host "OK" -ForegroundColor Green
-                Write-host "Adding permissions to " $role.name "... " -NoNewline
+                Write-host "Adding permissions to" $role.name"... " -NoNewline
                 try {
                     Add-AdminPermission -Role $role.name -Permission $role.permission
                     Write-host "OK" -ForegroundColor Green
                 }
                 catch {
-                    Write-Host "An error occured while setting permissions for " $role.name -ForegroundColor Red                        
+                    Write-Host "An error occured while setting permissions for" $role.name -ForegroundColor Red                        
                     Stop-Transcript
                     break
                 }
             }
             catch {
-                Write-Host "An error occured while adding a new admin" -ForegroundColor Red
+                Write-Host "An error occured while adding a new role" -ForegroundColor Red
                 Stop-Transcript
                 break
             }
         } else {
-            Write-Host $role.name " already exists. Role won't be modified by this script." -ForegroundColor Yellow
+            Write-Host $role.name "already exists. Role won't be modified by this script." -ForegroundColor Yellow
             Write-Host "Check manually role's properties." -ForegroundColor Yellow
         }
     }
+}else {
+    Write-Host "No roles to import" -ForegroundColor Yellow
 }
 
+Write-Host "Setting Scopes config... " -NoNewline
+if($xdoc.site.scopes){
+    $scopes = $xdoc.site.scopes.scope
+    foreach($scope in $scopes){
+        if(!(Get-AdminScope -Name $scope.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new scope" $scope.Name"... " -NoNewline
+            try {
+                New-AdminScope -Name $scope.Name -description $scope.description | out-null
+                Write-Host "OK" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "An error occured while adding a new scope" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+        } else {
+            Write-Host $scope.Name "already exists. Scope won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually scope's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No scopes to import" -ForegroundColor Yellow
+}
 
 
 Stop-Transcript
@@ -232,22 +257,7 @@ break
 
 
 
-Write-Host "Enumerating Scopes config... " -NoNewline
-try {
-    $oXMLScopes = $oXMLRoot.appendChild($Doc.CreateElement("Scopes"))
-    $scopes = get-adminscope
-    foreach ($scope in $scopes) {
-        $oxmlscope = $oXMLscopes.appendChild($Doc.CreateElement("Scope"))
-        $oxmlscopename = $oxmlscope.appendChild($Doc.CreateElement("Name"))
-        $oxmlscopename.InnerText = $scope.Name
-    }
-}
-catch {
-    Write-Host "An error occured while enumerating Scopes config" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
+
 
 Write-Host "Enumerating Administrators config... " -NoNewline
 try {

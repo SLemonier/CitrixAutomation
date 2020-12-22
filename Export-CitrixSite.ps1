@@ -241,6 +241,8 @@ try {
         $oxmlscope = $oXMLscopes.appendChild($Doc.CreateElement("Scope"))
         $oxmlscopename = $oxmlscope.appendChild($Doc.CreateElement("Name"))
         $oxmlscopename.InnerText = $scope.Name
+        $oxmlscopeDescription = $oxmlscope.appendChild($Doc.CreateElement("Description"))
+        $oxmlscopeDescription.InnerText = $scope.Description
     }
 }
 catch {
