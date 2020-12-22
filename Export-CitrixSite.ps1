@@ -393,7 +393,7 @@ try {
         $oxmloXMLAcctIdentityPoolIdentityPoolNamingSchemeType.InnerText = $AcctIdentityPool.NamingSchemeType
         $oxmloXMLAcctIdentityPoolIdentityPoolOU = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("OU"))
         $oxmloXMLAcctIdentityPoolIdentityPoolOU.InnerText = $AcctIdentityPool.OU
-        $scopes = $AcctIdentityPools.Scopes
+        $scopes = $AcctIdentityPool.Scopes
         foreach ($scope in $scopes){
             $oxmloXMLAcctIdentityPoolscope = $oxmloXMLAcctIdentityPool.appendChild($Doc.CreateElement("scope"))
             $oxmloXMLAcctIdentityPoolscope.InnerText = $scope.scopeName

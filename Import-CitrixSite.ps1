@@ -230,7 +230,7 @@ if($xdoc.site.Roles){
     Write-Host "No roles to import" -ForegroundColor Yellow
 }
 
-Write-Host "Setting Scopes config... " -NoNewline
+Write-Host "Setting Scopes config... "
 if($xdoc.site.scopes){
     $scopes = $xdoc.site.scopes.scope
     foreach($scope in $scopes){
@@ -254,7 +254,7 @@ if($xdoc.site.scopes){
     Write-Host "No scopes to import" -ForegroundColor Yellow
 }
 
-Write-Host "Setting Administrators config... " -NoNewline
+Write-Host "Setting Administrators config... "
 if($xdoc.site.administrators){
     $administrators = $xdoc.site.administrators.administrator
     foreach($administrator in $administrators){
@@ -289,15 +289,76 @@ if($xdoc.site.administrators){
 }
 
 ################################################################################################
+#Setting AcctIdentityPool
+################################################################################################
+
+
+Write-Host "Setting AcctIdentityPool config... "
+if($xdoc.site.AcctIdentityPools){
+    $AcctIdentityPools = $xdoc.site.AcctIdentityPools.AcctIdentityPool
+    foreach($AcctIdentityPool in $AcctIdentityPools){
+        if(!(get-AcctIdentityPool -IdentityPoolName $AcctIdentityPool.IdentityPoolName -errorAction SilentlyContinue)){
+            Write-host "Adding new AcctIdentityPool" $AcctIdentityPool.IdentityPoolName"... " -NoNewline
+            #try {
+                $Command = "New-AcctIdentityPool -IdentityPoolName $AcctIdentityPool.IdentityPoolName "
+                $command += "-NamingScheme $AcctIdentityPool.NamingScheme "
+                $command += "-NamingSchemeType $AcctIdentityPool.NamingSchemeType "
+                $command += "-OU $AcctIdentityPool.OU "
+                $command += "-Domain $AcctIdentityPool.Domain "
+                try {
+                    $count = $AcctIdentityPool.scope.count | Out-Null
+                    $i=0
+                    if($count -eq 1){
+                        $command += "-Scope $AcctIdentityPool.scope"
+                    } else {
+                        $command += "Scope "
+                        while ($i -lt $count) {
+                            $i++
+                            $command += $AcctIdentityPool.scope[$i]
+                            if($i -ne ($count - 1)){
+                                $command += ","
+                            }
+                        }
+                    }
+                }
+                catch {
+                    #No Scope to assign
+                }
+                write-host $command
+                Pause
+                Invoke-Expression $command
+                Write-Host "OK" -ForegroundColor Green
+            <#}
+            catch {
+                Write-Host "An error occured while adding a new ProvScheme" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }#>
+        } else {
+            Write-Host $AcctIdentityPool.IdentityPoolName "already exists. IdentityPoolName won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually IdentityPoolName's properties." -ForegroundColor Yellow
+        }
+        Pause
+    }
+} else {
+    Write-Host "No AcctIdentityPool to import" -ForegroundColor Yellow
+}
+
+
+
+Stop-Transcript
+break
+
+################################################################################################
 #Enumerating ProvSchemes
 ################################################################################################
 
 
-Write-Host "Setting ProvSchemes config... " -NoNewline
+Write-Host "Setting ProvSchemes config... "
 if($xdoc.site.provschemes){
     $provschemes = $xdoc.site.provschemes.provscheme
     foreach($provscheme in $provschemes){
-        if(!(get-ProvScheme -Name $provscheme.ProvisioningSchemeName -errorAction SilentlyContinue)){
+        if(!(get-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName -errorAction SilentlyContinue)){
             Write-host "Adding new ProvScheme" $provscheme.ProvisioningSchemeName"... " -NoNewline
             #try {
                 New-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName `
@@ -327,11 +388,6 @@ if($xdoc.site.provschemes){
                 catch {
                     #No Scope to assign
                 }
-                if($provscheme.scope){
-
-                }
-                $scope
-                foreach($scope in $provscheme.scopes)
                 Write-Host "OK" -ForegroundColor Green
 
             <#}
@@ -350,15 +406,13 @@ if($xdoc.site.provschemes){
     Write-Host "No ProvSchemes to import" -ForegroundColor Yellow
 }
 
-Stop-Transcript
-break
 
 
 ################################################################################################
 #Enumerating Catalogs
 ################################################################################################
 
-Write-Host "Enumerating Catalogs config... " -NoNewline
+Write-Host "Enumerating Catalogs config... "
 try {
     $oXMLCatalogs = $oXMLRoot.appendChild($Doc.CreateElement("Catalogs"))
     $Catalogs = Get-BrokerCatalog
