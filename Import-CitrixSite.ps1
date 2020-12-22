@@ -301,10 +301,10 @@ if($xdoc.site.AcctIdentityPools){
             Write-host "Adding new AcctIdentityPool" $AcctIdentityPool.IdentityPoolName"... " -NoNewline
             #try {
                 $Command = "New-AcctIdentityPool -IdentityPoolName """ + $AcctIdentityPool.IdentityPoolName + """"
-                $command += " -NamingScheme " + $AcctIdentityPool.NamingScheme  + """"
-                $command += " -NamingSchemeType " + $AcctIdentityPool.NamingSchemeType + """"
-                $command += " -OU "+ $AcctIdentityPool.OU + """"
-                $command += " -Domain "+ $AcctIdentityPool.Domain + """"
+                $command += " -NamingScheme """ + $AcctIdentityPool.NamingScheme  + """"
+                $command += " -NamingSchemeType """ + $AcctIdentityPool.NamingSchemeType + """"
+                $command += " -OU """+ $AcctIdentityPool.OU + """"
+                $command += " -Domain """+ $AcctIdentityPool.Domain + """"
                 try {
                     $count = $AcctIdentityPool.scope.count | Out-Null
                     $i=0
