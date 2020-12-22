@@ -311,9 +311,9 @@ if($xdoc.site.AcctIdentityPools){
                 } else {
                     $command += " -Scope """
                     while ($i -lt $count) {
-                        $command += $AcctIdentityPool.scope[$i] 
+                        $command += $AcctIdentityPool.scope[$i]
                         if($i -ne ($count - 1)){
-                            $command += ","
+                            $command += ""","""
                         } else {
                             $command += """"
                         }
@@ -364,10 +364,11 @@ if($xdoc.site.provschemes){
             $command += " -MasterImageVM """ + $provscheme.MasterImageVM + """"
             $command += " -VMCpuCount """ +  $provscheme.CpuCount + """"
             $command += " -VMMemoryMB """ + $provscheme.MemoryMB + """"
-            if($provscheme.UsePersonalVDiskStorage){
+            if($provscheme.UsePersonalVDiskStorage -match "True"){ #it is not a boolean but a string
                 $command += " -UsePersonalVDiskStorage"
+                #Require PersonalVDiskDriveLetter parameter
             }
-            if($ProvScheme.UseWriteBackCache){
+            if($ProvScheme.UseWriteBackCache -match "True"){ #it is not a boolean but a string
                 $command += " -UseWriteBackCache"
                 $command += " -WriteBackCacheDiskSize """ + $provscheme.WriteBackCacheDiskSize + """"
                 $command += " -WriteBackCacheMemorySize """ + $provscheme.WriteBackCacheMemorySize + """"
@@ -380,9 +381,9 @@ if($xdoc.site.provschemes){
                 } else {
                     $command += " -Scope """
                     while ($i -lt $count) {
-                        $command += $provscheme.scope[$i] 
+                        $command += $provscheme.scope[$i]
                         if($i -ne ($count - 1)){
-                            $command += ","
+                            $command += ""","""
                         } else {
                             $command += """"
                         }
