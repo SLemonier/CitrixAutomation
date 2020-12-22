@@ -300,18 +300,18 @@ if($xdoc.site.AcctIdentityPools){
         if(!(get-AcctIdentityPool -IdentityPoolName $AcctIdentityPool.IdentityPoolName -errorAction SilentlyContinue)){
             Write-host "Adding new AcctIdentityPool" $AcctIdentityPool.IdentityPoolName"... " -NoNewline
             #try {
-                $Command = "New-AcctIdentityPool -IdentityPoolName $AcctIdentityPool.IdentityPoolName "
-                $command += "-NamingScheme $AcctIdentityPool.NamingScheme "
-                $command += "-NamingSchemeType $AcctIdentityPool.NamingSchemeType "
-                $command += "-OU $AcctIdentityPool.OU "
-                $command += "-Domain $AcctIdentityPool.Domain "
+                $Command = "New-AcctIdentityPool -IdentityPoolName " + $AcctIdentityPool.IdentityPoolName 
+                $command += " -NamingScheme " + $AcctIdentityPool.NamingScheme
+                $command += " -NamingSchemeType " + $AcctIdentityPool.NamingSchemeType
+                $command += " -OU "+ $AcctIdentityPool.OU
+                $command += " -Domain "+ $AcctIdentityPool.Domain
                 try {
                     $count = $AcctIdentityPool.scope.count | Out-Null
                     $i=0
                     if($count -eq 1){
-                        $command += "-Scope $AcctIdentityPool.scope"
+                        $command += " -Scope $AcctIdentityPool.scope"
                     } else {
-                        $command += "Scope "
+                        $command += " -Scope "
                         while ($i -lt $count) {
                             $i++
                             $command += $AcctIdentityPool.scope[$i]
