@@ -168,24 +168,29 @@ if($xdoc.site.Properties.TrustXML.InnerText){
 #Setting Site's Tags
 ################################################################################################
 
-#TODO
-<#Write-Host "Setting Site's Tags... " -NoNewline
-try {
-    $oXMLTags = $oXMLRoot.appendChild($Doc.CreateElement("Tags"))
-    $tags = Get-BrokerTag
-    foreach ($Tag in $Tags) {
-        $oxmlTag = $oXMLTags.appendChild($Doc.CreateElement("Tag"))
-        $oxmltagName = $oXMLTag.appendChild($Doc.CreateElement("Name"))
-        $oxmltagName.InnerText = $Tag.Name
+Write-Host "Setting Site's Tags... " -NoNewline
+if($xdoc.site.tags){
+    $tags = $xdoc.site.tags.tag
+    foreach($tag in $tags){
+        if(!(Get-BrokerTag -Name $tag.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new tag" $tag.Name"... " -NoNewline
+            try {
+                New-BrokerTag -Name $scope.Name  | out-null
+                Write-Host "OK" -ForegroundColor Green
+            }
+            catch {
+                Write-Host "An error occured while adding a new tag" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+        } else {
+            Write-Host $tag.Name "already exists. tag won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually tag's properties." -ForegroundColor Yellow
+        }
     }
+} else {
+    Write-Host "No tags to import" -ForegroundColor Yellow
 }
-catch {
-    Write-Host "An error occured while setting Site's tags" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
-#>
 
 ################################################################################################
 #Setting Site's Administrators
@@ -256,7 +261,7 @@ if($xdoc.site.administrators){
         if(!(get-adminadministrator -Name $administrator.name -errorAction SilentlyContinue)){
             Write-host "Adding new admin" $administrator.Name"... " -NoNewline
             try {
-                New-AdminAdministrator -Name $administrator.Name
+                New-AdminAdministrator -Name $administrator.Name | Out-Null
                 Write-Host "OK" -ForegroundColor Green
                 Write-host "Setting permissions to" $administrator.name"... " -NoNewline
                 try {
