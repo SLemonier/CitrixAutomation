@@ -196,11 +196,11 @@ if($xdoc.site.Roles){
     $roles = $xdoc.site.roles.role
     foreach($role in $roles){
         if(!(Get-AdminRole -Name $role.Name -errorAction SilentlyContinue)){
-            Write-host "Adding new admin " $role.Name " ... " -NoNewline
+            Write-host "Adding new admin " $role.Name "... " -NoNewline
             try {
-                New-AdminRole -Name $role.Name
+                New-AdminRole -Name $role.Name -description $role.description | out-null
                 Write-Host "OK" -ForegroundColor Green
-                Write-host "Adding permissions to " $role.name " ... " -NoNewline
+                Write-host "Adding permissions to " $role.name "... " -NoNewline
                 try {
                     Add-AdminPermission -Role $role.name -Permission $role.permission
                     Write-host "OK" -ForegroundColor Green
@@ -216,6 +216,9 @@ if($xdoc.site.Roles){
                 Stop-Transcript
                 break
             }
+        } else {
+            Write-Host $role.name " already exists. Role won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually role's properties." -ForegroundColor Yellow
         }
     }
 }

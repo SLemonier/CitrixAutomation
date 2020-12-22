@@ -217,6 +217,8 @@ try {
         $oxmlRole = $oXMLRoles.appendChild($Doc.CreateElement("Role"))
         $oxmlrolename = $oxmlRole.appendChild($Doc.CreateElement("Name"))
         $oxmlrolename.InnerText = $Role.Name
+        $oxmlroleDescription = $oxmlRole.appendChild($Doc.CreateElement("Description"))
+        $oxmlroleDescription.InnerText = $Role.Description
         $permissions = $Role.Permissions
         foreach ($permission in $permissions){
             $oxmlrolepermission = $oxmlrole.appendChild($Doc.CreateElement("Permission"))
