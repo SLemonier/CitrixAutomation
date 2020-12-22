@@ -164,14 +164,12 @@ if($xdoc.site.Properties.TrustXML.InnerText){
     Write-Host "OK" -ForegroundColor Green
 }
 
-Stop-Transcript
-break
-
 ################################################################################################
-#Enumerating Site's Tags
+#Setting Site's Tags
 ################################################################################################
 
-Write-Host "Enumerating Site's Tags... " -NoNewline
+#TODO
+<#Write-Host "Setting Site's Tags... " -NoNewline
 try {
     $oXMLTags = $oXMLRoot.appendChild($Doc.CreateElement("Tags"))
     $tags = Get-BrokerTag
@@ -182,17 +180,24 @@ try {
     }
 }
 catch {
-    Write-Host "An error occured while enumerating Site's tags" -ForegroundColor Red
+    Write-Host "An error occured while setting Site's tags" -ForegroundColor Red
     Stop-Transcript
     break
 } 
 Write-Host "OK" -ForegroundColor Green
+#>
 
 ################################################################################################
-#Enumerating Site's Administrators
+#Setting Site's Administrators
 ################################################################################################
 
-Write-Host "Enumerating Roles config... " -NoNewline
+Write-Host "Setting Roles config... " -NoNewline
+if($xdoc.site.Roles){
+    $roles = $xdoc.site.roles.role
+    foreach($role in $roles){
+        
+    }
+}
 try {
     $oXMLRoles = $oXMLRoot.appendChild($Doc.CreateElement("Roles"))
     $Roles = get-adminRole
@@ -208,11 +213,20 @@ try {
     }
 }
 catch {
-    Write-Host "An error occured while enumerating Roles config" -ForegroundColor Red
+    Write-Host "An error occured while setting Roles config" -ForegroundColor Red
     Stop-Transcript
     break
 } 
 Write-Host "OK" -ForegroundColor Green
+
+
+
+Stop-Transcript
+break
+
+
+
+
 
 Write-Host "Enumerating Scopes config... " -NoNewline
 try {
