@@ -249,38 +249,44 @@ if($xdoc.site.scopes){
     Write-Host "No scopes to import" -ForegroundColor Yellow
 }
 
+Write-Host "Setting Administrators config... " -NoNewline
+if($xdoc.site.administrators){
+    $administrators = $xdoc.site.administrators.administor
+    foreach($administrator in $administrators){
+        if(!(get-adminadministrator -Name $administrator.name -errorAction SilentlyContinue)){
+            Write-host "Adding new admin" $administrator.Name"... " -NoNewline
+            try {
+                New-AdminAdministrator -Name $administrator.Name
+                Write-Host "OK" -ForegroundColor Green
+                Write-host "Setting permissions to" $administrator.name"... " -NoNewline
+                try {
+                    Add-AdminRight -Role $administrator.rolename -Scope $administrator.scopeName -Administrator $administrator.name
+                    Write-host "OK" -ForegroundColor Green
+                }
+                catch {
+                    Write-Host "An error occured while setting permissions for" $administrator.name -ForegroundColor Red                        
+                    Stop-Transcript
+                    break
+                }
+            }
+            catch {
+                Write-Host "An error occured while adding a new administrator" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+        } else {
+            Write-Host $administrator.Name "already exists. Administrator won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually administrator's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No administrators to import" -ForegroundColor Yellow
+}
+
 
 Stop-Transcript
 break
 
-
-
-
-
-
-
-Write-Host "Enumerating Administrators config... " -NoNewline
-try {
-    $oXMLadmins = $oXMLRoot.appendChild($Doc.CreateElement("Administrators"))
-    $admins = get-adminadministrator
-    foreach ($admin in $admins) {
-        $oxmladmin = $oXMLadmins.appendChild($Doc.CreateElement("Administrator"))
-        $oxmladminname = $oxmladmin.appendChild($Doc.CreateElement("Name"))
-        $oxmladminname.InnerText = $admin.Name
-        $oxmladminEnabled = $oxmladmin.appendChild($Doc.CreateElement("Enabled"))
-        $oxmladminEnabled.InnerText = $admin.Enabled
-        $oxmladminrolename = $oxmladmin.appendChild($Doc.CreateElement("RoleName"))
-        $oxmladminrolename.InnerText = $admin.Rights.RoleName
-        $oxmladminScopeName = $oxmladmin.appendChild($Doc.CreateElement("ScopeName"))
-        $oxmladminScopeName.InnerText = $admin.Rights.ScopeName
-    }
-}
-catch {
-    Write-Host "An error occured while enumerating Administrators config" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
 #Enumerating Catalogs
