@@ -251,7 +251,7 @@ if($xdoc.site.scopes){
 
 Write-Host "Setting Administrators config... " -NoNewline
 if($xdoc.site.administrators){
-    $administrators = $xdoc.site.administrators.administor
+    $administrators = $xdoc.site.administrators.administrator
     foreach($administrator in $administrators){
         if(!(get-adminadministrator -Name $administrator.name -errorAction SilentlyContinue)){
             Write-host "Adding new admin" $administrator.Name"... " -NoNewline
