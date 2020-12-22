@@ -191,33 +191,34 @@ Write-Host "OK" -ForegroundColor Green
 #Setting Site's Administrators
 ################################################################################################
 
-Write-Host "Setting Roles config... " -NoNewline
+Write-Host "Setting Roles config... "
 if($xdoc.site.Roles){
     $roles = $xdoc.site.roles.role
     foreach($role in $roles){
-        
-    }
-}
-try {
-    $oXMLRoles = $oXMLRoot.appendChild($Doc.CreateElement("Roles"))
-    $Roles = get-adminRole
-    foreach ($Role in $Roles) {
-        $oxmlRole = $oXMLRoles.appendChild($Doc.CreateElement("Role"))
-        $oxmlrolename = $oxmlRole.appendChild($Doc.CreateElement("Name"))
-        $oxmlrolename.InnerText = $Role.Name
-        $permissions = $Role.Permissions
-        foreach ($permission in $permissions){
-            $oxmlrolepermission = $oxmlrole.appendChild($Doc.CreateElement("Permission"))
-            $oxmlrolepermission.InnerText = $permission
+        if(!(Get-AdminRole -Name $role.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new admin " $role.Name " ... " -NoNewline
+            try {
+                New-AdminRole -Name $role.Name
+                Write-Host "OK" -ForegroundColor Green
+                Write-host "Adding permissions to " $role.name " ... " -NoNewline
+                try {
+                    Add-AdminPermission -Role $role.name -Permission $role.permission
+                    Write-host "OK" -ForegroundColor Green
+                }
+                catch {
+                    Write-Host "An error occured while setting permissions for " $role.name -ForegroundColor Red                        
+                    Stop-Transcript
+                    break
+                }
+            }
+            catch {
+                Write-Host "An error occured while adding a new admin" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
         }
     }
 }
-catch {
-    Write-Host "An error occured while setting Roles config" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
 
 
 
