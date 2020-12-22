@@ -343,8 +343,8 @@ try {
         $oxmlProvSchemeCpuCount.InnerText = $ProvScheme.CpuCount
         $oxmlProvSchemeMemoryMB = $oxmlProvScheme.appendChild($Doc.CreateElement("MemoryMB"))
         $oxmlProvSchemeMemoryMB.InnerText = $ProvScheme.MemoryMB
-        $oxmlProvSchemeDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("DiskSize"))
-        $oxmlProvSchemeDiskSize.InnerText = $ProvScheme.DiskSize
+        $oxmlProvSchemeDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("DiskSize")) #NotUsed
+        $oxmlProvSchemeDiskSize.InnerText = $ProvScheme.DiskSize #NotUsed
         $oxmlProvSchemeCleanOnBoot = $oxmlProvScheme.appendChild($Doc.CreateElement("CleanOnBoot"))
         $oxmlProvSchemeCleanOnBoot.InnerText = $ProvScheme.CleanOnBoot
         $oxmlProvSchemeUsePersonnalVDiskStorage = $oxmlProvScheme.appendChild($Doc.CreateElement("UsePersonalVDiskStorage"))
@@ -355,8 +355,8 @@ try {
         $oxmlProvSchemeWriteBackCacheDiskSize.InnerText = $ProvScheme.WriteBackCacheDiskSize
         $oxmlProvSchemeWriteBackCacheMemorySize = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheMemorySize"))
         $oxmlProvSchemeWriteBackCacheMemorySize.InnerText = $ProvScheme.WriteBackCacheMemorySize
-        $oxmlProvSchemeWriteBackCacheDiskIndex = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskIndex"))
-        $oxmlProvSchemeWriteBackCacheDiskIndex.InnerText = $ProvScheme.WriteBackCacheDiskIndex
+        $oxmlProvSchemeWriteBackCacheDiskIndex = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskIndex")) #NotUsed
+        $oxmlProvSchemeWriteBackCacheDiskIndex.InnerText = $ProvScheme.WriteBackCacheDiskIndex #NotUsed
         $scopes = $ProvScheme.Scopes
         foreach ($scope in $scopes){
             $oxmlProvSchemescope = $oxmlProvScheme.appendChild($Doc.CreateElement("scope"))

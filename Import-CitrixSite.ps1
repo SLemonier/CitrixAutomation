@@ -304,15 +304,42 @@ if($xdoc.site.provschemes){
                     -HostingUnitName $provscheme.HostingUnitName `
                     -IdentityPoolName $provscheme.IdentityPoolName `
                     -CleanOnBoot $provscheme.CleanOnBoot `
-                    -MasterImageVM $provschemes.MasterImageVM | Out-Null
+                    -MasterImageVM $provscheme.MasterImageVM `
+                    -VMCpuCount  $provscheme.CpuCount `
+                    -VMMemoryMB $provscheme.MemoryMB `
+                    -UsePersonalVDiskStorage $provscheme.UsePersonalVDiskStorage `
+                    -UseWriteBackCache $ProvScheme.UseWriteBackCache `
+                    -WriteBackCacheDiskSize $provscheme.WriteBackCacheDiskSize `
+                    -WriteBackCacheMemorySize $provscheme.WriteBackCacheMemorySize
+                try {
+                    $count = $provscheme.scope.count | Out-Null
+                    $i=0
+                    if($count -eq 1){
+                        #No index to referer to when ProvScheme has only one scope assigned
+                        Get-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName | Add-ProvSchemeScope -scope $provscheme.scope
+                    } else {
+                        while ($i -lt $count) {
+                            $i++
+                            Get-ProvScheme -ProvisioningSchemeName $provscheme.ProvisioningSchemeName | Add-ProvSchemeScope -scope $provscheme.scope[$i]
+                        }
+                    }
+                }
+                catch {
+                    #No Scope to assign
+                }
+                if($provscheme.scope){
+
+                }
+                $scope
+                foreach($scope in $provscheme.scopes)
                 Write-Host "OK" -ForegroundColor Green
 
-            }
+            <#}
             catch {
                 Write-Host "An error occured while adding a new ProvScheme" -ForegroundColor Red
                 Stop-Transcript
                 break
-            }
+            }#>
         } else {
             Write-Host $provscheme.ProvisioningSchemeName "already exists. ProvScheme won't be modified by this script." -ForegroundColor Yellow
             Write-Host "Check manually ProvScheme's properties." -ForegroundColor Yellow
@@ -322,42 +349,6 @@ if($xdoc.site.provschemes){
 } else {
     Write-Host "No ProvSchemes to import" -ForegroundColor Yellow
 }
-
-        #$oxmlProvSchemeProvisioningSchemeName = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisioningSchemeName"))
-        #$oxmlProvSchemeProvisioningSchemeName.InnerText = $ProvScheme.ProvisioningSchemeName
-        $oxmlProvSchemeProvisionSchemeUid = $oxmlProvScheme.appendChild($Doc.CreateElement("ProvisioningSchemeUid"))
-        $oxmlProvSchemeProvisionSchemeUid.InnerText = $ProvScheme.ProvisioningSchemeUid
-        #$oxmlProvSchemeHostingUnitName = $oxmlProvScheme.appendChild($Doc.CreateElement("HostingUnitName"))
-        #$oxmlProvSchemeHostingUnitName.InnerText = $ProvScheme.HostingUnitName
-        #$oxmlProvSchemeMasterImageVM = $oxmlProvScheme.appendChild($Doc.CreateElement("MasterImageVM"))
-        #$oxmlProvSchemeMasterImageVM.InnerText = $ProvScheme.MasterImageVM
-        #$oxmlProvSchemeIdentityPoolName = $oxmlProvScheme.appendChild($Doc.CreateElement("IdentityPoolName"))
-        #$oxmlProvSchemeIdentityPoolName.InnerText = $ProvScheme.IdentityPoolName
-        $oxmlProvSchemeCpuCount = $oxmlProvScheme.appendChild($Doc.CreateElement("CpuCount"))
-        $oxmlProvSchemeCpuCount.InnerText = $ProvScheme.CpuCount
-        $oxmlProvSchemeMemoryMB = $oxmlProvScheme.appendChild($Doc.CreateElement("MemoryMB"))
-        $oxmlProvSchemeMemoryMB.InnerText = $ProvScheme.MemoryMB
-        $oxmlProvSchemeDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("DiskSize"))
-        $oxmlProvSchemeDiskSize.InnerText = $ProvScheme.DiskSize
-        #$oxmlProvSchemeCleanOnBoot = $oxmlProvScheme.appendChild($Doc.CreateElement("CleanOnBoot"))
-        #$oxmlProvSchemeCleanOnBoot.InnerText = $ProvScheme.CleanOnBoot
-        $oxmlProvSchemeUsePersonnalVDiskStorage = $oxmlProvScheme.appendChild($Doc.CreateElement("UsePersonalVDiskStorage"))
-        $oxmlProvSchemeUsePersonnalVDiskStorage.InnerText = $ProvScheme.UsePersonalVDiskStorage
-        $oxmlProvSchemeUseWriteBackCache = $oxmlProvScheme.appendChild($Doc.CreateElement("UseWriteBackCache"))
-        $oxmlProvSchemeUseWriteBackCache.InnerText = $ProvScheme.UseWriteBackCache
-        $oxmlProvSchemeWriteBackCacheDiskSize = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskSize"))
-        $oxmlProvSchemeWriteBackCacheDiskSize.InnerText = $ProvScheme.WriteBackCacheDiskSize
-        $oxmlProvSchemeWriteBackCacheMemorySize = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheMemorySize"))
-        $oxmlProvSchemeWriteBackCacheMemorySize.InnerText = $ProvScheme.WriteBackCacheMemorySize
-        $oxmlProvSchemeWriteBackCacheDiskIndex = $oxmlProvScheme.appendChild($Doc.CreateElement("WriteBackCacheDiskIndex"))
-        $oxmlProvSchemeWriteBackCacheDiskIndex.InnerText = $ProvScheme.WriteBackCacheDiskIndex
-        $scopes = $ProvScheme.Scopes
-        foreach ($scope in $scopes){
-            $oxmlProvSchemescope = $oxmlProvScheme.appendChild($Doc.CreateElement("scope"))
-            $oxmlProvSchemescope.InnerText = $scope.scopeName
-        }
-
-
 
 Stop-Transcript
 break
