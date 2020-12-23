@@ -608,6 +608,8 @@ try {
         $oxmlBrokeraccesspolicyRuleDescription.InnerText = $BrokeraccesspolicyRule.Description
         $oxmlBrokeraccesspolicyRuleEnabled = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("Enabled"))
         $oxmlBrokeraccesspolicyRuleEnabled.InnerText = $BrokeraccesspolicyRule.Enabled
+        $oxmlBrokeraccesspolicyRuleIncludedSmartAccessFilterEnabled = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("IncludedSmartAccessFilterEnabled"))
+        $oxmlBrokeraccesspolicyRuleIncludedSmartAccessFilterEnabled.InnerText = $BrokeraccesspolicyRule.IncludedSmartAccessFilterEnabled
         $oxmlBrokeraccesspolicyRuleIncludedUserFilterEnabled = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("IncludedUserFilterEnabled"))
         $oxmlBrokeraccesspolicyRuleIncludedUserFilterEnabled.InnerText = $BrokeraccesspolicyRule.IncludedUserFilterEnabled
         if($BrokeraccesspolicyRule.IncludedUsers){
