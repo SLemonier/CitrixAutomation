@@ -306,23 +306,24 @@ if($xdoc.site.AcctIdentityPools){
             try {
                 $count = $AcctIdentityPool.scope.count
                 $i=0
-                if($count -eq 1){
-                    $command += " -Scope """ + $AcctIdentityPool.scope + """"
-                } else {
-                    $command += " -Scope """
-                    while ($i -lt $count) {
-                        $command += $AcctIdentityPool.scope[$i]
-                        if($i -ne ($count - 1)){
-                            $command += ""","""
-                        } else {
-                            $command += """"
-                        }
-                        $i++
+                $command += " -Scope """
+                while ($i -lt $count) {
+                    $command += $AcctIdentityPool.scope[$i]
+                    if($i -ne ($count - 1)){
+                        $command += ""","""
+                    } else {
+                        $command += """"
                     }
+                    $i++
                 }
             }
             catch {
-                #No Scope to assign
+                try { #Only one scope is declared
+                    $command += " -Scope """ + $provscheme.scope + """"
+                }
+                catch {
+                    #No Scope to assign
+                }
             }
             #write-host $command
             #Pause
@@ -376,26 +377,27 @@ if($xdoc.site.provschemes){
             try {
                 $count = $provscheme.scope.count
                 $i=0
-                if($count -eq 1){
-                    $command += " -Scope """ + $provscheme.scope + """"
-                } else {
-                    $command += " -Scope """
-                    while ($i -lt $count) {
-                        $command += $provscheme.scope[$i]
-                        if($i -ne ($count - 1)){
-                            $command += ""","""
-                        } else {
-                            $command += """"
-                        }
-                        $i++
+                $command += " -Scope """
+                while ($i -lt $count) {
+                    $command += $provscheme.scope[$i]
+                    if($i -ne ($count - 1)){
+                        $command += ""","""
+                    } else {
+                        $command += """"
                     }
+                    $i++
                 }
             }
             catch {
-                #No Scope to assign
+                try { #Only one scope is declared
+                    $command += " -Scope """ + $provscheme.scope + """"
+                }
+                catch {
+                    #No Scope to assign
+                }
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
                 Invoke-Expression $command | Out-Null
             }
@@ -409,7 +411,6 @@ if($xdoc.site.provschemes){
             Write-Host $provscheme.ProvisioningSchemeName "already exists. ProvScheme won't be modified by this script." -ForegroundColor Yellow
             Write-Host "Check manually ProvScheme's properties." -ForegroundColor Yellow
         }
-        Pause
     }
 } else {
     Write-Host "No ProvSchemes to import" -ForegroundColor Yellow
@@ -432,8 +433,18 @@ if($xdoc.site.Catalogs){
             $command += " -ProvisioningType """ + $Catalog.ProvisioningType + """"
             $command += " -SessionSupport """ + $Catalog.SessionSupport + """"
             $command += " -PersistUserChanges """ + $Catalog.PersistUserChanges + """"
-            $command += " -IsRemotePC """ + $Catalog.IsRemotePC + """"
-            $command += " -MachinesArePhysical """ + $Catalog.MachinesArePhysical + """"
+            if($Catalog.IsRemotePC -match "True"){
+                $command += " -IsRemotePC `$True"
+            }
+            if($Catalog.IsRemotePC -match "False"){
+                $command += " -IsRemotePC `$False"
+            }
+            if($Catalog.MachinesArePhysical -match "True"){
+                $command += " -MachinesArePhysical `$True"
+            }
+            if($Catalog.MachinesArePhysical -match "False"){
+                $command += " -MachinesArePhysical `$False"
+            }
             if($Catalog.ProvisioningSchemeName){
                 $ProvisioningSchemeUid = (Get-ProvScheme -ProvisioningSchemeName $Catalog.ProvisioningSchemeName).ProvisioningSchemeUid
                 $command += " -ProvisioningSchemeId """ + $ProvisioningSchemeUid + """"
@@ -441,23 +452,24 @@ if($xdoc.site.Catalogs){
             try {
                 $count = $Catalog.scope.count
                 $i=0
-                if($count -eq 1){
-                    $command += " -Scope """ + $Catalog.scope + """"
-                } else {
-                    $command += " -Scope """
-                    while ($i -lt $count) {
-                        $command += $Catalog.scope[$i]
-                        if($i -ne ($count - 1)){
-                            $command += ""","""
-                        } else {
-                            $command += """"
-                        }
-                        $i++
+                $command += " -Scope """
+                while ($i -lt $count) {
+                    $command += $Catalog.scope[$i]
+                    if($i -ne ($count - 1)){
+                        $command += ""","""
+                    } else {
+                        $command += """"
                     }
+                    $i++
                 }
             }
             catch {
-                #No Scope to assign
+                try { #Only one scope is declared
+                    $command += " -Scope """ + $Catalog.scope + """"
+                }
+                catch {
+                    #No Scope to assign
+                }
             }
             write-host $command
             Pause
@@ -485,40 +497,6 @@ break
 
 
 
-
-
-################################################################################################
-#Enumerating Catalogs
-################################################################################################
-
-Write-Host "Enumerating Catalogs config... "
-try {
-    $oXMLCatalogs = $oXMLRoot.appendChild($Doc.CreateElement("Catalogs"))
-    $Catalogs = Get-BrokerCatalog
-    foreach ($Catalog in $Catalogs) {
-        $oxmlCatalog = $oXMLCatalogs.appendChild($Doc.CreateElement("Catalog"))
-
-
-        $oxmlCatalogProvisioningSchemeId = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeId"))
-        $oxmlCatalogProvisioningSchemeId.InnerText = $Catalog.ProvisioningSchemeId
-        $oxmlCatalogHypervisorConnectionUid = $oxmlCatalog.appendChild($Doc.CreateElement("HypervisorConnectionUid"))
-        $oxmlCatalogHypervisorConnectionUid.InnerText = $Catalog.HypervisorConnectionUid
-        $scopes = $Catalog.Scopes
-        foreach ($scope in $scopes){
-            $oxmlCatalogscope = $oxmlCatalog.appendChild($Doc.CreateElement("scope"))
-            $oxmlCatalogscope.InnerText = $scope
-        }
-    }
-}
-catch {
-    Write-Host "An error occured while enumerating Catalogs config" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
-
-
-
 ################################################################################################
 #Enumerating DeliveryGroups
 ################################################################################################
@@ -528,6 +506,7 @@ try {
     $oXMLDeliveryGroups = $oXMLRoot.appendChild($Doc.CreateElement("DeliveryGroups"))
     $DeliveryGroups = Get-BrokerDesktopGroup
     foreach ($DeliveryGroup in $DeliveryGroups) {
+
         $oxmlDeliveryGroup = $oXMLDeliveryGroups.appendChild($Doc.CreateElement("DeliveryGroup"))
         $oxmlDeliveryGroupname = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Name"))
         $oxmlDeliveryGroupname.InnerText = $DeliveryGroup.Name
