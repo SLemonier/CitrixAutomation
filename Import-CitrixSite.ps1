@@ -495,16 +495,22 @@ if($xdoc.site.Catalogs){
 ################################################################################################
 
 Write-Host "Setting DesktopGroups config... "
-if($xdoc.site.DesktopGroups){
-    $DesktopGroups = $xdoc.site.DesktopGroups.DesktopGroup
+if($xdoc.site.DeliveryGroups){
+    $DesktopGroups = $xdoc.site.DeliveryGroups.DeliveryGroup
     foreach($DesktopGroup in $DesktopGroups){
         if(!(Get-BrokerDesktopGroup -Name $DesktopGroup.Name -errorAction SilentlyContinue)){
             Write-host "Adding new DesktopGroup" $DesktopGroup.Name"... " -NoNewline
             $command = "New-BrokerDesktopGroup -Name """ + $DesktopGroup.Name + """"
             $command += " -PublishedName """ + $DesktopGroup.PublishedName + """"
+            $command += " -Description """ + $DesktopGroup.Description + """"
             $command += " -DesktopKind """ + $DesktopGroup.DesktopKind + """"
             $command += " -SessionSupport """ + $DesktopGroup.SessionSupport + """"
-            $command += " -ShutdownDesktopsAfterUse """ + $DesktopGroup.ShutdownDesktopsAfterUse + """"
+            if($DesktopGroup.ShutdownDesktopsAfterUse -match "True"){
+                $command += " -ShutdownDesktopsAfterUse `$True"
+            }
+            if($DesktopGroup.ShutdownDesktopsAfterUse -match "False"){
+                $command += " -ShutdownDesktopsAfterUse `$False"
+            }
             if($DesktopGroup.AutomaticPowerOnForAssigned -match "True"){
                 $command += " -AutomaticPowerOnForAssigned `$True"
             }
@@ -528,7 +534,7 @@ if($xdoc.site.DesktopGroups){
             $iconUid = $DesktopGroup.IconUid
             if(test-path -Path "./resources/$iconuid.txt"){
                 $encodedData = Get-Content -Path "./resources/$iconuid.txt"
-                $brokericon = New-BrokerIcon -EncodedData $encodedData
+                $brokericon = New-BrokerIcon -EncodedIconData $encodedData
                 $command += " -IconUid """ + $brokericon.Uid + """"
             }
             if($DesktopGroup.IsRemotePC -match "True"){

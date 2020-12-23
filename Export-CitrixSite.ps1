@@ -496,6 +496,56 @@ catch {
 Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
+#Enumerating EntitlementPolicyRules
+################################################################################################
+
+Write-Host "Enumerating EntitlementPolicyRules config... " -NoNewline
+try {
+    $oXMLEntitlementPolicyRules = $oXMLRoot.appendChild($Doc.CreateElement("EntitlementPolicyRules"))
+    $EntitlementPolicyRules = Get-BrokerEntitlementPolicyRules
+    foreach ($EntitlementPolicyRule in $EntitlementPolicyRules) {
+        $oxmlEntitlementPolicyRule = $oXMLEntitlementPolicyRules.appendChild($Doc.CreateElement("EntitlementPolicyRule"))
+        $oxmlEntitlementPolicyRulename = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Name"))
+        $oxmlEntitlementPolicyRulename.InnerText = $EntitlementPolicyRule.Name
+        $oxmlEntitlementPolicyRulePublishedName = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("PublishedName"))
+        $oxmlEntitlementPolicyRulePublishedName.InnerText = $EntitlementPolicyRule.PublishedName
+        $oxmlEntitlementPolicyRuleDescription = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Description"))
+        $oxmlEntitlementPolicyRuleDescription.InnerText = $EntitlementPolicyRule.Description
+        $oxmlEntitlementPolicyRuleDesktopGroupUid = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("DesktopGroupUid"))
+        $oxmlEntitlementPolicyRuleDesktopGroupUid.InnerText = $EntitlementPolicyRule.DesktopGroupUid
+        #Replace by DesktopGroupName
+        $oxmlEntitlementPolicyRuleEnabled = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Enabled"))
+        $oxmlEntitlementPolicyRuleEnabled.InnerText = $EntitlementPolicyRule.Enabled
+        $oxmlEntitlementPolicyRuleExcludedUserFilterEnabled = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("ExcludedUserFilterEnabled"))
+        $oxmlEntitlementPolicyRuleExcludedUserFilterEnabled.InnerText = $EntitlementPolicyRule.ExcludedUserFilterEnabled
+        if($EntitlementPolicyRule.excludedusers){
+            $excludedusers = $EntitlementPolicyRule.excludedusers
+            foreach ($excludeduser in $excludedusers){
+                $oxmlEntitlementPolicyRule = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("excludeduser"))
+                $oxmlEntitlementPolicyRule.InnerText = $excludedusers
+            }
+        }
+        $oxmlEntitlementPolicyRuleIncludedUserFilterEnabled = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("IncludedUserFilterEnabled"))
+        $oxmlEntitlementPolicyRuleIncludedUserFilterEnabled.InnerText = $EntitlementPolicyRule.IncludedUserFilterEnabled
+        if($EntitlementPolicyRule.Includedusers){
+            $Includedusers = $EntitlementPolicyRule.Includedusers
+            foreach ($Includeduser in $Includedusers){
+                $oxmlEntitlementPolicyRule = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Includeduser"))
+                $oxmlEntitlementPolicyRule.InnerText = $Includedusers
+            }
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating EntitlementPolicyRules config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+
+
+################################################################################################
 #Enumerating PublishedApps
 ################################################################################################
 
