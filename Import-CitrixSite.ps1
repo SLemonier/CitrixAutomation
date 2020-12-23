@@ -419,7 +419,7 @@ if($xdoc.site.provschemes){
 ################################################################################################
 #Setting Catalogs
 ################################################################################################
-
+<#
 Write-Host "Setting Catalogs config... "
 if($xdoc.site.Catalogs){
     $Catalogs = $xdoc.site.Catalogs.Catalog
@@ -489,11 +489,11 @@ if($xdoc.site.Catalogs){
 } else {
     Write-Host "No Catalogs to import" -ForegroundColor Yellow
 }
-
+#>
 ################################################################################################
 #Setting DesktopGroups
 ################################################################################################
-
+<#
 Write-Host "Setting DesktopGroups config... "
 if($xdoc.site.DeliveryGroups){
     $DesktopGroups = $xdoc.site.DeliveryGroups.DeliveryGroup
@@ -597,11 +597,11 @@ if($xdoc.site.DeliveryGroups){
 } else {
     Write-Host "No DesktopGroups to import" -ForegroundColor Yellow
 }
-
+#>
 ################################################################################################
 #Setting EntitlementPolicyRules
 ################################################################################################
-
+<#
 Write-Host "Setting EntitlementPolicyRules config... "
 if($xdoc.site.EntitlementPolicyRules){
     $EntitlementPolicyRules = $xdoc.site.EntitlementPolicyRules.EntitlementPolicyRule
@@ -688,7 +688,7 @@ if($xdoc.site.EntitlementPolicyRules){
 } else {
     Write-Host "No EntitlementPolicyRules to import" -ForegroundColor Yellow
 }
-
+#>
 ################################################################################################
 #Setting Brokerpowertimeschemes
 ################################################################################################
