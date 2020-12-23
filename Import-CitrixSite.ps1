@@ -524,7 +524,6 @@ if($xdoc.site.DeliveryGroups){
                 $command += " -AutomaticPowerOnForAssignedDuringPeak `$False"
             }
             $command += " -DeliveryType """ + $DesktopGroup.DeliveryType + """"
-            $command += " -Description """ + $DesktopGroup.Description + """"
             if($DesktopGroup.Enabled -match "True"){
                 $command += " -Enabled `$True"
             }
@@ -689,6 +688,8 @@ if($xdoc.site.EntitlementPolicyRules){
 } else {
     Write-Host "No EntitlementPolicyRules to import" -ForegroundColor Yellow
 }
+
+#TODO Users, PowerManagement, AccessPolicy
 
 Stop-Transcript
 break

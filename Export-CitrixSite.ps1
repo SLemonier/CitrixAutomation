@@ -544,6 +544,45 @@ catch {
 Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
+#Enumerating Brokerpowertimeschemes
+################################################################################################
+
+Write-Host "Enumerating Brokerpowertimeschemes config... " -NoNewline
+try {
+    $oXMLBrokerpowertimeschemes = $oXMLRoot.appendChild($Doc.CreateElement("Brokerpowertimeschemes"))
+    $Brokerpowertimeschemes = Get-Brokerpowertimescheme
+    foreach ($Brokerpowertimescheme in $Brokerpowertimeschemes) {
+        $oxmlBrokerpowertimescheme = $oXMLBrokerpowertimeschemes.appendChild($Doc.CreateElement("Brokerpowertimescheme"))
+        $oxmlBrokerpowertimeschemename = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("Name"))
+        $oxmlBrokerpowertimeschemename.InnerText = $Brokerpowertimescheme.Name
+        $oxmlBrokerpowertimeschemeDaysOfWeek = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("DaysOfWeek"))
+        $oxmlBrokerpowertimeschemeDaysOfWeek.InnerText = $Brokerpowertimescheme.DaysOfWeek
+        $oxmlBrokerpowertimeschemeDesktopGroupname = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("DesktopGroupname"))
+        $oxmlBrokerpowertimeschemeDesktopGroupname.InnerText = (Get-BrokerDesktopGroup -Uid $Brokerpowertimescheme.Uid).Name
+        $oxmlBrokerpowertimeschemeDisplayName = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("DisplayName"))
+        $oxmlBrokerpowertimeschemeDisplayName.InnerText = $Brokerpowertimescheme.DisplayName
+        $oxmlBrokerpowertimeschemePoolUsingPercentage = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("PoolUsingPercentage"))
+        $oxmlBrokerpowertimeschemePoolUsingPercentage.InnerText = $Brokerpowertimescheme.PoolUsingPercentage
+        $PeakHours = $Brokerpowertimescheme.PeakHours
+        foreach ($PeakHour in $PeakHours){
+            $oxmlBrokerpowertimeschemePoolUsingPeakHour = $oxmlBrokerpowertimeschemePoolUsingPeakHour.appendChild($Doc.CreateElement("PeakHour"))
+            $oxmlBrokerpowertimeschemePoolUsingPeakHour.InnerText = $PeakHour
+        }
+        $PoolSizes = $Brokerpowertimescheme.PoolSize
+        foreach ($PoolSize in $PoolSizes){
+            $oxmlBrokerpowertimeschemePoolUsingPoolSize = $oxmlBrokerpowertimeschemePoolUsingPoolSize.appendChild($Doc.CreateElement("PoolSize"))
+            $oxmlBrokerpowertimeschemePoolUsingPoolSize.InnerText = $PoolSize
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating Brokerpowertimeschemes config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
 #Enumerating PublishedApps
 ################################################################################################
 
