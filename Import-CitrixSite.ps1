@@ -856,9 +856,11 @@ if($xdoc.site.Brokerrebootschedules){
             $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $Brokerrebootschedule.DesktopGroupName).Uid
             $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
             $command += " -RebootDuration """ + $Brokerrebootschedule.RebootDuration + """"
-            $command += " -Day """ + $Brokerrebootschedule.Day + """"
             $command += " -Description """ + $Brokerrebootschedule.Description + """"
             $command += " -Frequency """ + $Brokerrebootschedule.Frequency + """"
+            if($Brokerrebootschedule.Frequency -notmatch "Daily"){
+                $command += " -Day """ + $Brokerrebootschedule.Day + """"
+            }
             $command += " -StartTime """ + $Brokerrebootschedule.StartTime + """"
             $command += " -WarningDuration """ + $Brokerrebootschedule.WarningDuration + """"
             $command += " -WarningMessage """ + $Brokerrebootschedule.WarningMessage + """"
