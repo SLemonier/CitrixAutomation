@@ -613,7 +613,7 @@ try {
         if($BrokeraccesspolicyRule.IncludedUsers){
             $Includedusers = $BrokeraccesspolicyRule.IncludedUsers
             foreach ($Includeduser in $Includedusers){
-                $oxmlBrokeraccesspolicyRuleIncludedusers = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("excludeduser"))
+                $oxmlBrokeraccesspolicyRuleIncludedusers = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("Includeduser"))
                 $oxmlBrokeraccesspolicyRuleIncludedusers.InnerText = $Includeduser.Name
             }
         }
