@@ -420,7 +420,6 @@ if($xdoc.site.provschemes){
 #Setting Catalogs
 ################################################################################################
 
-
 Write-Host "Setting Catalogs config... "
 if($xdoc.site.Catalogs){
     $Catalogs = $xdoc.site.Catalogs.Catalog
@@ -471,8 +470,8 @@ if($xdoc.site.Catalogs){
                     #No Scope to assign
                 }
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
                 Invoke-Expression $command | Out-Null
             }
@@ -486,102 +485,117 @@ if($xdoc.site.Catalogs){
             Write-Host $Catalog.Name "already exists. Catalog won't be modified by this script." -ForegroundColor Yellow
             Write-Host "Check manually Catalog's properties." -ForegroundColor Yellow
         }
-        Pause
     }
 } else {
     Write-Host "No Catalogs to import" -ForegroundColor Yellow
 }
 
+################################################################################################
+#Setting DesktopGroups
+################################################################################################
+
+Write-Host "Setting DesktopGroups config... "
+if($xdoc.site.DesktopGroups){
+    $DesktopGroups = $xdoc.site.DesktopGroups.DesktopGroup
+    foreach($DesktopGroup in $DesktopGroups){
+        if(!(Get-BrokerDesktopGroup -Name $DesktopGroup.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new DesktopGroup" $DesktopGroup.Name"... " -NoNewline
+            $command = "New-BrokerDesktopGroup -Name """ + $DesktopGroup.Name + """"
+            $command += " -PublishedName """ + $DesktopGroup.PublishedName + """"
+            $command += " -DesktopKind """ + $DesktopGroup.DesktopKind + """"
+            $command += " -SessionSupport """ + $DesktopGroup.SessionSupport + """"
+            $command += " -ShutdownDesktopsAfterUse """ + $DesktopGroup.ShutdownDesktopsAfterUse + """"
+            if($DesktopGroup.AutomaticPowerOnForAssigned -match "True"){
+                $command += " -AutomaticPowerOnForAssigned `$True"
+            }
+            if($DesktopGroup.AutomaticPowerOnForAssigned -match "False"){
+                $command += " -AutomaticPowerOnForAssigned `$False"
+            }
+            if($DesktopGroup.AutomaticPowerOnForAssignedDuringPeak -match "True"){
+                $command += " -AutomaticPowerOnForAssignedDuringPeak `$True"
+            }
+            if($DesktopGroup.AutomaticPowerOnForAssignedDuringPeak -match "False"){
+                $command += " -AutomaticPowerOnForAssignedDuringPeak `$False"
+            }
+            $command += " -DeliveryType """ + $DesktopGroup.DeliveryType + """"
+            $command += " -Description """ + $DesktopGroup.Description + """"
+            if($DesktopGroup.Enabled -match "True"){
+                $command += " -Enabled `$True"
+            }
+            if($DesktopGroup.Enabled -match "False"){
+                $command += " -Enabled `$False"
+            }
+            $iconUid = $DesktopGroup.IconUid
+            if(test-path -Path "./resources/$iconuid.txt"){
+                $encodedData = Get-Content -Path "./resources/$iconuid.txt"
+                $brokericon = New-BrokerIcon -EncodedData $encodedData
+                $command += " -IconUid """ + $brokericon.Uid + """"
+            }
+            if($DesktopGroup.IsRemotePC -match "True"){
+                $command += " -IsRemotePC `$True"
+            }
+            if($DesktopGroup.IsRemotePC -match "False"){
+                $command += " -IsRemotePC `$False"
+            }
+            $command += " -OffPeakBufferSizePercent """ + $DesktopGroup.OffPeakBufferSizePercent + """"
+            $command += " -OffPeakDisconnectAction """ + $DesktopGroup.OffPeakDisconnectAction + """"
+            $command += " -OffPeakDisconnectTimeout """ + $DesktopGroup.OffPeakDisconnectTimeout + """"
+            $command += " -OffPeakExtendedDisconnectAction	 """ + $DesktopGroup.OffPeakExtendedDisconnectAction	 + """"
+            $command += " -OffPeakExtendedDisconnectTimeout	 """ + $DesktopGroup.OffPeakExtendedDisconnectTimeout	 + """"
+            $command += " -OffPeakLogOffAction	 """ + $DesktopGroup.OffPeakLogOffAction	 + """"
+            $command += " -OffPeakLogOffTimeout	 """ + $DesktopGroup.OffPeakLogOffTimeout	 + """"
+            $command += " -PeakBufferSizePercent	 """ + $DesktopGroup.PeakBufferSizePercent	 + """"
+            $command += " -PeakDisconnectAction	 """ + $DesktopGroup.PeakDisconnectAction	 + """"
+            $command += " -PeakDisconnectTimeout	 """ + $DesktopGroup.PeakDisconnectTimeout	 + """"
+            $command += " -PeakExtendedDisconnectAction	 """ + $DesktopGroup.PeakExtendedDisconnectAction	 + """"
+            $command += " -PeakExtendedDisconnectTimeout	 """ + $DesktopGroup.PeakExtendedDisconnectTimeout	 + """"
+            $command += " -PeakLogOffAction	 """ + $DesktopGroup.PeakLogOffAction	 + """"
+            $command += " -PeakLogOffTimeout	 """ + $DesktopGroup.PeakLogOffTimeout	 + """"
+            try {
+                $count = $DesktopGroup.scope.count
+                $i=0
+                $command += " -Scope """
+                while ($i -lt $count) {
+                    $command += $DesktopGroup.scope[$i]
+                    if($i -ne ($count - 1)){
+                        $command += ""","""
+                    } else {
+                        $command += """"
+                    }
+                    $i++
+                }
+            }
+            catch {
+                try { #Only one scope is declared
+                    $command += " -Scope """ + $DesktopGroup.scope + """"
+                }
+                catch {
+                    #No Scope to assign
+                }
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command #| Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new DesktopGroup" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $DesktopGroup.Name "already exists. DesktopGroup won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually DesktopGroup's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No DesktopGroups to import" -ForegroundColor Yellow
+}
+
 Stop-Transcript
 break
 
-
-
-################################################################################################
-#Enumerating DeliveryGroups
-################################################################################################
-
-Write-Host "Enumerating Delivery Groups config... " -NoNewline
-try {
-    $oXMLDeliveryGroups = $oXMLRoot.appendChild($Doc.CreateElement("DeliveryGroups"))
-    $DeliveryGroups = Get-BrokerDesktopGroup
-    foreach ($DeliveryGroup in $DeliveryGroups) {
-
-        $oxmlDeliveryGroup = $oXMLDeliveryGroups.appendChild($Doc.CreateElement("DeliveryGroup"))
-        $oxmlDeliveryGroupname = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Name"))
-        $oxmlDeliveryGroupname.InnerText = $DeliveryGroup.Name
-        $oxmlDeliveryGroupPublishedName = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PublishedName"))
-        $oxmlDeliveryGroupPublishedName.InnerText = $DeliveryGroup.PublishedName
-        $oxmlDeliveryGroupDescription = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Description"))
-        $oxmlDeliveryGroupDescription.InnerText = $DeliveryGroup.Description
-        $oxmlDeliveryGroupDeliveryType = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("DeliveryType"))
-        $oxmlDeliveryGroupDeliveryType.InnerText = $DeliveryGroup.DeliveryType
-        $oxmlDeliveryGroupIconUid = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("IconUid"))
-        $oxmlDeliveryGroupIconUid.InnerText = $DeliveryGroup.IconUid
-        $iconUid = $DeliveryGroup.IconUid
-        if(!(test-path -Path "./resources/$iconuid.txt")){
-            (Get-BrokerIcon -Uid $iconUid).EncodedIconData | Out-File "./resources/$iconuid.txt"
-        }
-        $oxmlDeliveryGroupDesktopKind = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("DesktopKind"))
-        $oxmlDeliveryGroupDesktopKind.InnerText = $DeliveryGroup.DesktopKind
-        $oxmlDeliveryGroupEnabled = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Enabled"))
-        $oxmlDeliveryGroupEnabled.InnerText = $DeliveryGroup.Enabled
-        $oxmlDeliveryGroupAutomaticPowerOnForAssigned = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AutomaticPowerOnForAssigned"))
-        $oxmlDeliveryGroupAutomaticPowerOnForAssigned.InnerText = $DeliveryGroup.AutomaticPowerOnForAssigned
-        $oxmlDeliveryGroupAutomaticPowerOnForAssignedDuringPeak = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("AutomaticPowerOnForAssignedDuringPeak"))
-        $oxmlDeliveryGroupAutomaticPowerOnForAssignedDuringPeak.InnerText = $DeliveryGroup.AutomaticPowerOnForAssignedDuringPeak
-        $oxmlDeliveryGroupIsRemotePC = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("IsRemotePC"))
-        $oxmlDeliveryGroupIsRemotePC.InnerText = $DeliveryGroup.IsRemotePC
-        $oxmlDeliveryGroupOffPeakBufferSizePercent = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakBufferSizePercent"))
-        $oxmlDeliveryGroupOffPeakBufferSizePercent.InnerText = $DeliveryGroup.OffPeakBufferSizePercent
-        $oxmlDeliveryGroupOffPeakDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakDisconnectAction"))
-        $oxmlDeliveryGroupOffPeakDisconnectAction.InnerText = $DeliveryGroup.OffPeakDisconnectAction
-        $oxmlDeliveryGroupOffPeakDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakDisconnectTimeout"))
-        $oxmlDeliveryGroupOffPeakDisconnectTimeout.InnerText = $DeliveryGroup.OffPeakDisconnectTimeout
-        $oxmlDeliveryGroupOffPeakExtendedDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakExtendedDisconnectAction"))
-        $oxmlDeliveryGroupOffPeakExtendedDisconnectAction.InnerText = $DeliveryGroup.OffPeakExtendedDisconnectAction
-        $oxmlDeliveryGroupOffPeakExtendedDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakExtendedDisconnectTimeout"))
-        $oxmlDeliveryGroupOffPeakExtendedDisconnectTimeout.InnerText = $DeliveryGroup.OffPeakExtendedDisconnectTimeout
-        $oxmlDeliveryGroupOffPeakLogOffAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakLogOffAction"))
-        $oxmlDeliveryGroupOffPeakLogOffAction.InnerText = $DeliveryGroup.OffPeakLogOffAction
-        $oxmlDeliveryGroupOffPeakLogOffTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("OffPeakLogOffTimeout"))
-        $oxmlDeliveryGroupOffPeakLogOffTimeout.InnerText = $DeliveryGroup.OffPeakLogOffTimeout
-        $oxmlDeliveryGroupPeakBufferSizePercent = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakBufferSizePercent"))
-        $oxmlDeliveryGroupPeakBufferSizePercent.InnerText = $DeliveryGroup.PeakBufferSizePercent
-        $oxmlDeliveryGroupPeakDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakDisconnectAction"))
-        $oxmlDeliveryGroupPeakDisconnectAction.InnerText = $DeliveryGroup.PeakDisconnectAction
-        $oxmlDeliveryGroupPeakDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakDisconnectTimeout"))
-        $oxmlDeliveryGroupPeakDisconnectTimeout.InnerText = $DeliveryGroup.PeakDisconnectTimeout
-        $oxmlDeliveryGroupPeakExtendedDisconnectAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakExtendedDisconnectAction"))
-        $oxmlDeliveryGroupPeakExtendedDisconnectAction.InnerText = $DeliveryGroup.PeakExtendedDisconnectAction
-        $oxmlDeliveryGroupPeakExtendedDisconnectTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakExtendedDisconnectTimeout"))
-        $oxmlDeliveryGroupPeakExtendedDisconnectTimeout.InnerText = $DeliveryGroup.PeakExtendedDisconnectTimeout
-        $oxmlDeliveryGroupPeakLogOffAction = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakLogOffAction"))
-        $oxmlDeliveryGroupPeakLogOffAction.InnerText = $DeliveryGroup.PeakLogOffAction
-        $oxmlDeliveryGroupPeakLogOffTimeout = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("PeakLogOffTimeout"))
-        $oxmlDeliveryGroupPeakLogOffTimeout.InnerText = $DeliveryGroup.PeakLogOffTimeout
-        $scopes = $DeliveryGroup.Scopes
-        foreach ($scope in $scopes){
-            $oxmlDeliveryGroupscope = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("scope"))
-            $oxmlDeliveryGroupscope.InnerText = $scope
-        }
-        $oxmlDeliveryGroupSessionSupport = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("SessionSupport"))
-        $oxmlDeliveryGroupSessionSupport.InnerText = $DeliveryGroup.SessionSupport
-        $oxmlDeliveryGroupShutdownDesktopsAfterUse = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("ShutdownDesktopsAfterUse"))
-        $oxmlDeliveryGroupShutdownDesktopsAfterUse.InnerText = $DeliveryGroup.ShutdownDesktopsAfterUse
-        $Tags = $DeliveryGroup.Tags
-        foreach ($Tag in $Tags){
-            $oxmlDeliveryGroupTag = $oxmlDeliveryGroup.appendChild($Doc.CreateElement("Tag"))
-            $oxmlDeliveryGroupTag.InnerText = $tag
-        }
-    }
-}
-catch {
-    Write-Host "An error occured while enumerating Delivery Groups config" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
 #Enumerating PublishedApps
