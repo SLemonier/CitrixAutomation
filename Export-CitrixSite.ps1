@@ -565,12 +565,12 @@ try {
         $oxmlBrokerpowertimeschemePoolUsingPercentage.InnerText = $Brokerpowertimescheme.PoolUsingPercentage
         $PeakHours = $Brokerpowertimescheme.PeakHours
         foreach ($PeakHour in $PeakHours){
-            $oxmlBrokerpowertimeschemePoolUsingPeakHour = $oxmlBrokerpowertimeschemePoolUsingPeakHour.appendChild($Doc.CreateElement("PeakHour"))
+            $oxmlBrokerpowertimeschemePoolUsingPeakHour = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("PeakHour"))
             $oxmlBrokerpowertimeschemePoolUsingPeakHour.InnerText = $PeakHour
         }
         $PoolSizes = $Brokerpowertimescheme.PoolSize
         foreach ($PoolSize in $PoolSizes){
-            $oxmlBrokerpowertimeschemePoolUsingPoolSize = $oxmlBrokerpowertimeschemePoolUsingPoolSize.appendChild($Doc.CreateElement("PoolSize"))
+            $oxmlBrokerpowertimeschemePoolUsingPoolSize = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("PoolSize"))
             $oxmlBrokerpowertimeschemePoolUsingPoolSize.InnerText = $PoolSize
         }
     }
