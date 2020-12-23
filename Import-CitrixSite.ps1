@@ -739,10 +739,10 @@ if($xdoc.site.Brokerpowertimeschemes){
                 }
                 $i++
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
-                Invoke-Expression $command #| Out-Null
+                Invoke-Expression $command | Out-Null
             }
             catch {
                 Write-Host "An error occured while adding a new Brokerpowertimescheme" -ForegroundColor Red
@@ -757,6 +757,83 @@ if($xdoc.site.Brokerpowertimeschemes){
     }
 } else {
     Write-Host "No Brokerpowertimeschemes to import" -ForegroundColor Yellow
+}
+
+################################################################################################
+#Setting BrokeraccesspolicyRules
+################################################################################################
+
+Write-Host "Setting BrokeraccesspolicyRules config... "
+if($xdoc.site.BrokeraccesspolicyRules){
+    $BrokeraccesspolicyRules = $xdoc.site.BrokeraccesspolicyRules.BrokeraccesspolicyRule
+    foreach($BrokeraccesspolicyRule in $BrokeraccesspolicyRules){
+        if(!(Get-BrokeraccesspolicyRule -Name $BrokeraccesspolicyRule.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new BrokeraccesspolicyRule" $BrokeraccesspolicyRule.Name"... " -NoNewline
+            $command = "New-BrokeraccesspolicyRule -Name """ + $BrokeraccesspolicyRule.Name + """"
+            $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $BrokeraccesspolicyRule.DesktopGroupName).Uid
+            $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
+            $command += " -AllowedConnections """ + $BrokeraccesspolicyRule.AllowedConnections + """"
+            $command += " -AllowedProtocols """ + $BrokeraccesspolicyRule.AllowedProtocols + """"
+            $command += " -AllowedUsers """ + $BrokeraccesspolicyRule.AllowedUsers + """"
+            $command += " -Description """ + $BrokeraccesspolicyRule.Description + """"
+            if($BrokeraccesspolicyRule.AllowRestart -match "True"){
+                $command += " -AllowRestart `$True"
+            }
+            if($BrokeraccesspolicyRule.AllowRestart -match "False"){
+                $command += " -AllowRestart `$False"
+            }
+            if($BrokeraccesspolicyRule.Enabled -match "True"){
+                $command += " -Enabled `$True"
+            }
+            if($BrokeraccesspolicyRule.Enabled -match "False"){
+                $command += " -Enabled `$False"
+            }
+            if($BrokeraccesspolicyRule.IncludedUserFilterEnabled -match "True"){
+                $command += " -IncludedUserFilterEnabled `$True"
+            }
+            if($BrokeraccesspolicyRule.IncludedUserFilterEnabled -match "False"){
+                $command += " -IncludedUserFilterEnabled `$False"
+            }
+            try {
+                $count = $BrokeraccesspolicyRule.IncludedUser.count
+                $i=0
+                $command += " -IncludedUsers """
+                while ($i -lt $count) {
+                    $command += $BrokeraccesspolicyRule.IncludedUser[$i]
+                    if($i -ne ($count - 1)){
+                        $command += ""","""
+                    } else {
+                        $command += """"
+                    }
+                    $i++
+                }
+            }
+            catch {
+                try { #Only one IncludedUsers is declared
+                    $command += " -IncludedUsers """ + $BrokeraccesspolicyRule.IncludedUser + """"
+                }
+                catch {
+                    #No IncludedUsers to assign
+                }
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command #| Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new BrokeraccesspolicyRule" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $Brokerpowertimescheme.Name "already exists. BrokeraccesspolicyRule won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually BrokeraccesspolicyRule's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No BrokeraccesspolicyRules to import" -ForegroundColor Yellow
 }
 
 #TODO Users,  AccessPolicy
