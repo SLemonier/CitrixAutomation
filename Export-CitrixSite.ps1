@@ -502,7 +502,7 @@ Write-Host "OK" -ForegroundColor Green
 Write-Host "Enumerating EntitlementPolicyRules config... " -NoNewline
 try {
     $oXMLEntitlementPolicyRules = $oXMLRoot.appendChild($Doc.CreateElement("EntitlementPolicyRules"))
-    $EntitlementPolicyRules = Get-BrokerEntitlementPolicyRules
+    $EntitlementPolicyRules = Get-BrokerEntitlementPolicyRule
     foreach ($EntitlementPolicyRule in $EntitlementPolicyRules) {
         $oxmlEntitlementPolicyRule = $oXMLEntitlementPolicyRules.appendChild($Doc.CreateElement("EntitlementPolicyRule"))
         $oxmlEntitlementPolicyRulename = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Name"))
@@ -542,8 +542,6 @@ catch {
     break
 } 
 Write-Host "OK" -ForegroundColor Green
-
-
 
 ################################################################################################
 #Enumerating PublishedApps
