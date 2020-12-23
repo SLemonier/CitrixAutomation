@@ -782,6 +782,12 @@ if($xdoc.site.BrokeraccesspolicyRules){
             if($BrokeraccesspolicyRule.AllowRestart -match "False"){
                 $command += " -AllowRestart `$False"
             }
+            if($BrokeraccesspolicyRule.IncludedSmartAccessFilterEnabled -match "True"){
+                $command += " -IncludedSmartAccessFilterEnabled `$True"
+            }
+            if($BrokeraccesspolicyRule.IncludedSmartAccessFilterEnabled -match "False"){
+                $command += " -IncludedSmartAccessFilterEnabled `$False"
+            }
             if($BrokeraccesspolicyRule.Enabled -match "True"){
                 $command += " -Enabled `$True"
             }
