@@ -301,8 +301,9 @@ try {
         $oxmlCatalogIsRemotePC.InnerText = $Catalog.IsRemotePC
         $oxmlCatalogMachinesArePhysical = $oxmlCatalog.appendChild($Doc.CreateElement("MachinesArePhysical"))
         $oxmlCatalogMachinesArePhysical.InnerText = $Catalog.MachinesArePhysical
-        $oxmlCatalogProvisioningSchemeId = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeId"))
-        $oxmlCatalogProvisioningSchemeId.InnerText = $Catalog.ProvisioningSchemeId
+        $oxmlCatalogProvisioningSchemeId = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeName"))
+        $ProvisioningSchemeName = (Get-ProvScheme -ProvisioningSchemeUid $Catalog.ProvisioningSchemeUid).ProvisioningSchemeName
+        $oxmlCatalogProvisioningSchemeId.InnerText = $ProvisioningSchemeName
         $oxmlCatalogHypervisorConnectionUid = $oxmlCatalog.appendChild($Doc.CreateElement("HypervisorConnectionUid"))
         $oxmlCatalogHypervisorConnectionUid.InnerText = $Catalog.HypervisorConnectionUid
         $scopes = $Catalog.Scopes

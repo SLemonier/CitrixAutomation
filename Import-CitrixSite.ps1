@@ -291,7 +291,7 @@ if($xdoc.site.administrators){
 ################################################################################################
 #Setting AcctIdentityPool
 ################################################################################################
-
+<#
 Write-Host "Setting AcctIdentityPool config... "
 if($xdoc.site.AcctIdentityPools){
     $AcctIdentityPools = $xdoc.site.AcctIdentityPools.AcctIdentityPool
@@ -343,12 +343,12 @@ if($xdoc.site.AcctIdentityPools){
 } else {
     Write-Host "No AcctIdentityPools to import" -ForegroundColor Yellow
 }
-
+#>
 ################################################################################################
 #Setting ProvSchemes
 ################################################################################################
 
-
+<#
 Write-Host "Setting ProvSchemes config... "
 if($xdoc.site.provschemes){
     $provschemes = $xdoc.site.provschemes.provscheme
@@ -406,13 +406,78 @@ if($xdoc.site.provschemes){
             }
             Write-Host "OK" -ForegroundColor Green
         } else {
-            Write-Host $provscheme.ProvisioningSchemeName "already exists. ProvSchemes won't be modified by this script." -ForegroundColor Yellow
-            Write-Host "Check manually ProvSchemes's properties." -ForegroundColor Yellow
+            Write-Host $provscheme.ProvisioningSchemeName "already exists. ProvScheme won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually ProvScheme's properties." -ForegroundColor Yellow
         }
         Pause
     }
 } else {
     Write-Host "No ProvSchemes to import" -ForegroundColor Yellow
+}
+#>
+################################################################################################
+#Setting Catalogs
+################################################################################################
+
+
+Write-Host "Setting Catalogs config... "
+if($xdoc.site.Catalogs){
+    $Catalogs = $xdoc.site.Catalogs.Catalog
+    foreach($Catalog in $Catalogs){
+        if(!(Get-BrokerCatalog -Name $Catalog.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new Catalog" $Catalog.Name"... " -NoNewline
+            $command = "New-BrokerCatalog -Name """ + $Catalog.Name + """"
+            $command += " -AllocationType """ + $Catalog.AllocationType + """"
+            $command += " -Description """ + $Catalog.Description + """"
+            $command += " -ProvisioningType """ + $Catalog.ProvisioningType + """"
+            $command += " -SessionSupport """ + $Catalog.SessionSupport + """"
+            $command += " -PersistUserChanges """ + $Catalog.PersistUserChanges + """"
+            $command += " -IsRemotePC """ + $Catalog.IsRemotePC + """"
+            $command += " -MachinesArePhysical """ + $Catalog.MachinesArePhysical + """"
+            if($Catalog.ProvisioningSchemeName){
+                $ProvisioningSchemeUid = (Get-ProvScheme -ProvisioningSchemeName $Catalog.ProvisioningSchemeName).ProvisioningSchemeUid
+                $command += " -ProvisioningSchemeId """ + $ProvisioningSchemeUid + """"
+            }
+            try {
+                $count = $Catalog.scope.count
+                $i=0
+                if($count -eq 1){
+                    $command += " -Scope """ + $Catalog.scope + """"
+                } else {
+                    $command += " -Scope """
+                    while ($i -lt $count) {
+                        $command += $Catalog.scope[$i]
+                        if($i -ne ($count - 1)){
+                            $command += ""","""
+                        } else {
+                            $command += """"
+                        }
+                        $i++
+                    }
+                }
+            }
+            catch {
+                #No Scope to assign
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command | Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new Catalog" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $Catalog.Name "already exists. Catalog won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually Catalog's properties." -ForegroundColor Yellow
+        }
+        Pause
+    }
+} else {
+    Write-Host "No Catalogs to import" -ForegroundColor Yellow
 }
 
 Stop-Transcript
@@ -432,22 +497,8 @@ try {
     $Catalogs = Get-BrokerCatalog
     foreach ($Catalog in $Catalogs) {
         $oxmlCatalog = $oXMLCatalogs.appendChild($Doc.CreateElement("Catalog"))
-        $oxmlCatalogname = $oxmlCatalog.appendChild($Doc.CreateElement("Name"))
-        $oxmlCatalogname.InnerText = $Catalog.Name
-        $oxmlCatalogDescription = $oxmlCatalog.appendChild($Doc.CreateElement("Description"))
-        $oxmlCatalogDescription.InnerText = $Catalog.Description
-        $oxmlCatalogAllocationType = $oxmlCatalog.appendChild($Doc.CreateElement("AllocationType"))
-        $oxmlCatalogAllocationType.InnerText = $Catalog.AllocationType
-        $oxmlCatalogProvisioningType = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningType"))
-        $oxmlCatalogProvisioningType.InnerText = $Catalog.ProvisioningType
-        $oxmlCatalogSessionSupport = $oxmlCatalog.appendChild($Doc.CreateElement("SessionSupport"))
-        $oxmlCatalogSessionSupport.InnerText = $Catalog.SessionSupport
-        $oxmlCatalogPersistUserChanges = $oxmlCatalog.appendChild($Doc.CreateElement("PersistUserChanges"))
-        $oxmlCatalogPersistUserChanges.InnerText = $Catalog.PersistUserChanges
-        $oxmlCatalogIsRemotePC = $oxmlCatalog.appendChild($Doc.CreateElement("IsRemotePC"))
-        $oxmlCatalogIsRemotePC.InnerText = $Catalog.IsRemotePC
-        $oxmlCatalogMachinesArePhysical = $oxmlCatalog.appendChild($Doc.CreateElement("MachinesArePhysical"))
-        $oxmlCatalogMachinesArePhysical.InnerText = $Catalog.MachinesArePhysical
+
+
         $oxmlCatalogProvisioningSchemeId = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeId"))
         $oxmlCatalogProvisioningSchemeId.InnerText = $Catalog.ProvisioningSchemeId
         $oxmlCatalogHypervisorConnectionUid = $oxmlCatalog.appendChild($Doc.CreateElement("HypervisorConnectionUid"))
