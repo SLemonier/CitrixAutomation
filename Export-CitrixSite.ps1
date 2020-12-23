@@ -511,9 +511,9 @@ try {
         $oxmlEntitlementPolicyRulePublishedName.InnerText = $EntitlementPolicyRule.PublishedName
         $oxmlEntitlementPolicyRuleDescription = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Description"))
         $oxmlEntitlementPolicyRuleDescription.InnerText = $EntitlementPolicyRule.Description
-        $oxmlEntitlementPolicyRuleDesktopGroupUid = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("DesktopGroupUid"))
-        $oxmlEntitlementPolicyRuleDesktopGroupUid.InnerText = $EntitlementPolicyRule.DesktopGroupUid
-        #Replace by DesktopGroupName
+        $oxmlEntitlementPolicyRuleDesktopGroupName = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("DesktopGroupName"))
+        $DesktopGroupName = (Get-BrokerDesktopGroup -Uid $EntitlementPolicyRule.DesktopGroupUid).Name
+        $oxmlEntitlementPolicyRuleDesktopGroupName.InnerText = $DesktopGroupName
         $oxmlEntitlementPolicyRuleEnabled = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Enabled"))
         $oxmlEntitlementPolicyRuleEnabled.InnerText = $EntitlementPolicyRule.Enabled
         $oxmlEntitlementPolicyRuleExcludedUserFilterEnabled = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("ExcludedUserFilterEnabled"))
