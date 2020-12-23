@@ -637,32 +637,32 @@ try {
     $Brokerrebootschedules = $oXMLRoot.appendChild($Doc.CreateElement("Brokerrebootschedules"))
     $Brokerrebootschedules = Get-Brokerrebootschedulev2
     foreach ($Brokerrebootschedule in $Brokerrebootschedules) {
-        $Brokerrebootschedule = $Brokerrebootschedules.appendChild($Doc.CreateElement("Brokerrebootschedule"))
-        $BrokerrebootscheduleName = $Brokerrebootschedule.appendChild($Doc.CreateElement("Name"))
+        $BrokerrebootscheduleRule = $Brokerrebootschedules.appendChild($Doc.CreateElement("Brokerrebootschedule"))
+        $BrokerrebootscheduleName = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("Name"))
         $BrokerrebootscheduleName.InnerText = $Brokerrebootschedule.Name
-        $BrokerrebootscheduleActive = $Brokerrebootschedule.appendChild($Doc.CreateElement("Active"))
+        $BrokerrebootscheduleActive = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("Active"))
         $BrokerrebootscheduleActive.InnerText = $Brokerrebootschedule.Active
-        $BrokerrebootscheduleDay = $Brokerrebootschedule.appendChild($Doc.CreateElement("Day"))
+        $BrokerrebootscheduleDay = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("Day"))
         $BrokerrebootscheduleDay.InnerText = $Brokerrebootschedule.Day
-        $BrokerrebootscheduleDescription = $Brokerrebootschedule.appendChild($Doc.CreateElement("Description"))
+        $BrokerrebootscheduleDescription = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("Description"))
         $BrokerrebootscheduleDescription.InnerText = $Brokerrebootschedule.Description
-        $BrokerrebootscheduleDesktopGroupName = $Brokerrebootschedule.appendChild($Doc.CreateElement("DesktopGroupName"))
+        $BrokerrebootscheduleDesktopGroupName = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("DesktopGroupName"))
         $BrokerrebootscheduleDesktopGroupName.InnerText = $Brokerrebootschedule.DesktopGroupName
-        $BrokerrebootscheduleEnabled = $Brokerrebootschedule.appendChild($Doc.CreateElement("Enabled"))
+        $BrokerrebootscheduleEnabled = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("Enabled"))
         $BrokerrebootscheduleEnabled.InnerText = $Brokerrebootschedule.Enabled
-        $BrokerrebootscheduleFrequency = $Brokerrebootschedule.appendChild($Doc.CreateElement("Frequency"))
+        $BrokerrebootscheduleFrequency = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("Frequency"))
         $BrokerrebootscheduleFrequency.InnerText = $Brokerrebootschedule.Frequency
-        $BrokerrebootscheduleRebootDuration = $Brokerrebootschedule.appendChild($Doc.CreateElement("RebootDuration"))
+        $BrokerrebootscheduleRebootDuration = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("RebootDuration"))
         $BrokerrebootscheduleRebootDuration.InnerText = $Brokerrebootschedule.RebootDuration
-        $BrokerrebootscheduleStartTime = $Brokerrebootschedule.appendChild($Doc.CreateElement("StartTime"))
+        $BrokerrebootscheduleStartTime = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("StartTime"))
         $BrokerrebootscheduleStartTime.InnerText = $Brokerrebootschedule.StartTime
-        $BrokerrebootscheduleWarningDuration = $Brokerrebootschedule.appendChild($Doc.CreateElement("WarningDuration"))
+        $BrokerrebootscheduleWarningDuration = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("WarningDuration"))
         $BrokerrebootscheduleWarningDuration.InnerText = $Brokerrebootschedule.WarningDuration
-        $BrokerrebootscheduleWarningMessage = $Brokerrebootschedule.appendChild($Doc.CreateElement("WarningMessage"))
+        $BrokerrebootscheduleWarningMessage = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("WarningMessage"))
         $BrokerrebootscheduleWarningMessage.InnerText = $Brokerrebootschedule.WarningMessage
-        $BrokerrebootscheduleWarningRepeatInterval = $Brokerrebootschedule.appendChild($Doc.CreateElement("WarningRepeatInterval"))
+        $BrokerrebootscheduleWarningRepeatInterval = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("WarningRepeatInterval"))
         $BrokerrebootscheduleWarningRepeatInterval.InnerText = $Brokerrebootschedule.WarningRepeatInterval
-        $BrokerrebootscheduleWarningTitle = $Brokerrebootschedule.appendChild($Doc.CreateElement("WarningTitle"))
+        $BrokerrebootscheduleWarningTitle = $BrokerrebootscheduleRule.appendChild($Doc.CreateElement("WarningTitle"))
         $BrokerrebootscheduleWarningTitle.InnerText = $Brokerrebootschedule.WarningTitle
     }
 }
