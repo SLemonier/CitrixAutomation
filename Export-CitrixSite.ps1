@@ -558,7 +558,7 @@ try {
         $oxmlBrokerpowertimeschemeDaysOfWeek = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("DaysOfWeek"))
         $oxmlBrokerpowertimeschemeDaysOfWeek.InnerText = $Brokerpowertimescheme.DaysOfWeek
         $oxmlBrokerpowertimeschemeDesktopGroupname = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("DesktopGroupname"))
-        $oxmlBrokerpowertimeschemeDesktopGroupname.InnerText = (Get-BrokerDesktopGroup -Uid $Brokerpowertimescheme.Uid).Name
+        $oxmlBrokerpowertimeschemeDesktopGroupname.InnerText = (Get-BrokerDesktopGroup -Uid $Brokerpowertimescheme.DesktopGroupUid).Name
         $oxmlBrokerpowertimeschemeDisplayName = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("DisplayName"))
         $oxmlBrokerpowertimeschemeDisplayName.InnerText = $Brokerpowertimescheme.DisplayName
         $oxmlBrokerpowertimeschemePoolUsingPercentage = $oxmlBrokerpowertimescheme.appendChild($Doc.CreateElement("PoolUsingPercentage"))
