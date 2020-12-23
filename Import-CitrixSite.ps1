@@ -704,7 +704,6 @@ if($xdoc.site.Brokerpowertimeschemes){
             $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
             $command += " -DaysOfWeek """ + $Brokerpowertimescheme.DaysOfWeek + """"
             $command += " -DisplayName """ + $Brokerpowertimescheme.DisplayName + """"
-            $command += " -DaysOfWeek """ + $Brokerpowertimescheme.DaysOfWeek + """"
             if($Brokerpowertimescheme.PoolUsingPercentage -match "True"){
                 $command += " -PoolUsingPercentage `$True"
             }

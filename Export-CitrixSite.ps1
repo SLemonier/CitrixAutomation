@@ -583,6 +583,50 @@ catch {
 Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
+#Enumerating BrokeraccesspolicyRules
+################################################################################################
+
+Write-Host "Enumerating BrokeraccesspolicyRules config... " -NoNewline
+try {
+    $oXMLBrokeraccesspolicyRules = $oXMLRoot.appendChild($Doc.CreateElement("BrokeraccesspolicyRules"))
+    $BrokeraccesspolicyRules = Get-BrokeraccesspolicyRule
+    foreach ($BrokeraccesspolicyRule in $BrokeraccesspolicyRules) {
+        $oxmlBrokeraccesspolicyRule = $oXMLBrokeraccesspolicyRules.appendChild($Doc.CreateElement("BrokeraccesspolicyRule"))
+        $oxmlBrokeraccesspolicyRuleName = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("Name"))
+        $oxmlBrokeraccesspolicyRuleName.InnerText = $BrokeraccesspolicyRule.Name
+        $oxmlBrokeraccesspolicyRuleDesktopGroupName = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("DesktopGroupName"))
+        $oxmlBrokeraccesspolicyRuleDesktopGroupName.InnerText = (Get-BrokerDesktopGroup -Uid $BrokeraccesspolicyRule.DesktopGroupUid).Name
+        $oxmlBrokeraccesspolicyRuleAllowRestart = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("AllowRestart"))
+        $oxmlBrokeraccesspolicyRuleAllowRestart.InnerText = $BrokeraccesspolicyRule.AllowRestart
+        $oxmlBrokeraccesspolicyRuleAllowedConnections = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("AllowedConnections"))
+        $oxmlBrokeraccesspolicyRuleAllowedConnections.InnerText = $BrokeraccesspolicyRule.AllowedConnections
+        $oxmlBrokeraccesspolicyRuleAllowedProtocols = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("AllowedProtocols"))
+        $oxmlBrokeraccesspolicyRuleAllowedProtocols.InnerText = $BrokeraccesspolicyRule.AllowedProtocols
+        $oxmlBrokeraccesspolicyRuleAllowedUsers = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("AllowedUsers"))
+        $oxmlBrokeraccesspolicyRuleAllowedUsers.InnerText = $BrokeraccesspolicyRule.AllowedUsers
+        $oxmlBrokeraccesspolicyRuleDescription = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("Description"))
+        $oxmlBrokeraccesspolicyRuleDescription.InnerText = $BrokeraccesspolicyRule.Description
+        $oxmlBrokeraccesspolicyRuleEnabled = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("Enabled"))
+        $oxmlBrokeraccesspolicyRuleEnabled.InnerText = $BrokeraccesspolicyRule.Enabled
+        $oxmlBrokeraccesspolicyRuleIncludedUserFilterEnabled = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("IncludedUserFilterEnabled"))
+        $oxmlBrokeraccesspolicyRuleIncludedUserFilterEnabled.InnerText = $BrokeraccesspolicyRule.IncludedUserFilterEnabled
+        if($BrokeraccesspolicyRule.IncludedUsers){
+            $Includedusers = $BrokeraccesspolicyRule.IncludedUsers
+            foreach ($Includeduser in $Includedusers){
+                $oxmlBrokeraccesspolicyRuleIncludedusers = $oxmlBrokeraccesspolicyRule.appendChild($Doc.CreateElement("excludeduser"))
+                $oxmlBrokeraccesspolicyRuleIncludedusers.InnerText = $Includeduser.Name
+            }
+        }
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating BrokeraccesspolicyRules config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
 #Enumerating PublishedApps
 ################################################################################################
 
