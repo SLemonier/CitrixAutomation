@@ -634,10 +634,10 @@ Write-Host "OK" -ForegroundColor Green
 
 Write-Host "Enumerating Brokerrebootschedules config... " -NoNewline
 try {
-    $Brokerrebootschedules = $oXMLRoot.appendChild($Doc.CreateElement("Brokerrebootschedules"))
+    $OXMLBrokerrebootschedules = $oXMLRoot.appendChild($Doc.CreateElement("Brokerrebootschedules"))
     $Brokerrebootschedules = Get-Brokerrebootschedulev2
     foreach ($Brokerrebootschedule in $Brokerrebootschedules) {
-        $OXMLBrokerrebootscheduleRule = $Brokerrebootschedules.appendChild($Doc.CreateElement("Brokerrebootschedule"))
+        $OXMLBrokerrebootscheduleRule = $OXMLBrokerrebootschedules.appendChild($Doc.CreateElement("Brokerrebootschedule"))
         $OXMLBrokerrebootscheduleName = $OXMLBrokerrebootscheduleRule.appendChild($Doc.CreateElement("Name"))
         $OXMLBrokerrebootscheduleName.InnerText = $Brokerrebootschedule.Name
         $OXMLBrokerrebootscheduleActive = $OXMLBrokerrebootscheduleRule.appendChild($Doc.CreateElement("Active"))
