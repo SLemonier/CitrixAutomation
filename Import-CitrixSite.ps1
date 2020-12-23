@@ -669,10 +669,10 @@ if($xdoc.site.EntitlementPolicyRules){
             if($EntitlementPolicyRule.IncludedUserFilterEnabled -match "False"){
                 $command += " -IncludedUserFilterEnabled `$False"
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
-                Invoke-Expression $command #| Out-Null
+                Invoke-Expression $command | Out-Null
             }
             catch {
                 Write-Host "An error occured while adding a new EntitlementPolicyRule" -ForegroundColor Red
@@ -689,82 +689,78 @@ if($xdoc.site.EntitlementPolicyRules){
     Write-Host "No EntitlementPolicyRules to import" -ForegroundColor Yellow
 }
 
-#TODO Users, PowerManagement, AccessPolicy
-
-Stop-Transcript
-break
-
-
 ################################################################################################
-#Enumerating PublishedApps
+#Setting Brokerpowertimeschemes
 ################################################################################################
 
-Write-Host "Enumerating Published Apps config... " -NoNewline
-try {
-    $oXMLPublishedApps = $oXMLRoot.appendChild($Doc.CreateElement("PublishedApps"))
-    $PublishedApps = Get-BrokerApplication
-    foreach ($PublishedApp in $PublishedApps) {
-        $oxmlPublishedApp = $oXMLPublishedApps.appendChild($Doc.CreateElement("PublishedApp"))
-        $oxmlPublishedAppname = $oxmlPublishedApp.appendChild($Doc.CreateElement("Name"))
-        $oxmlPublishedAppname.InnerText = $PublishedApp.Name
-        $oxmlPublishedAppDescription = $oxmlPublishedApp.appendChild($Doc.CreateElement("Description"))
-        $oxmlPublishedAppDescription.InnerText = $PublishedApp.Description
-        $oxmlPublishedAppCommandLineExecutable = $oxmlPublishedApp.appendChild($Doc.CreateElement("CommandLineExecutable"))
-        $oxmlPublishedAppCommandLineExecutable.InnerText = $PublishedApp.CommandLineExecutable
-        $oxmlPublishedAppCommandLineArguments = $oxmlPublishedApp.appendChild($Doc.CreateElement("CommandLineArguments"))
-        $oxmlPublishedAppCommandLineArguments.InnerText = $PublishedApp.CommandLineArguments
-        $oxmlPublishedAppWorkingDirectory = $oxmlPublishedApp.appendChild($Doc.CreateElement("WorkingDirectory"))
-        $oxmlPublishedAppWorkingDirectory.InnerText = $PublishedApp.WorkingDirectory
-        $oxmlPublishedAppPublishedName = $oxmlPublishedApp.appendChild($Doc.CreateElement("PublishedName"))
-        $oxmlPublishedAppPublishedName.InnerText = $PublishedApp.PublishedName
-        $oxmlPublishedAppIconUid = $oxmlPublishedApp.appendChild($Doc.CreateElement("IconUid"))
-        $oxmlPublishedAppIconUid.InnerText = $PublishedApp.IconUid
-        $iconUid = $PublishedApp.IconUid
-        if(!(test-path -Path "./resources/$iconuid.txt")){
-            (Get-BrokerIcon -Uid $iconUid).EncodedIconData | Out-File "./resources/$iconuid.txt"
+Write-Host "Setting Brokerpowertimeschemes config... "
+if($xdoc.site.Brokerpowertimeschemes){
+    $Brokerpowertimeschemes = $xdoc.site.Brokerpowertimeschemes.Brokerpowertimescheme
+    foreach($Brokerpowertimescheme in $Brokerpowertimeschemes){
+        if(!(Get-Brokerpowertimescheme -Name $Brokerpowertimescheme.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new Brokerpowertimescheme" $Brokerpowertimescheme.Name"... " -NoNewline
+            $command = "New-Brokerpowertimescheme -Name """ + $Brokerpowertimescheme.Name + """"
+            $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $Brokerpowertimescheme.DesktopGroupName).Uid
+            $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
+            $command += " -DaysOfWeek """ + $Brokerpowertimescheme.DaysOfWeek + """"
+            $command += " -DisplayName """ + $Brokerpowertimescheme.DisplayName + """"
+            $command += " -DaysOfWeek """ + $Brokerpowertimescheme.DaysOfWeek + """"
+            if($Brokerpowertimescheme.PoolUsingPercentage -match "True"){
+                $command += " -PoolUsingPercentage `$True"
+            }
+            if($Brokerpowertimescheme.PoolUsingPercentage -match "False"){
+                $command += " -PoolUsingPercentage `$False"
+            }
+            $count = $Brokerpowertimescheme.PeakHour.count
+            $i=0
+            $command += " -PeakHours @("
+            while ($i -lt $count) {
+                if($Brokerpowertimescheme.PeakHour[$i] -match "True"){
+                    $command += "`$True"
+                }
+                if($Brokerpowertimescheme.PeakHour[$i] -match "False"){
+                    $command += "`$False"
+                }
+                if($i -ne ($count - 1)){
+                    $command += ","
+                } else {
+                    $command += ")"
+                }
+                $i++
+            }
+            $count = $Brokerpowertimescheme.PoolSize.count
+            $i=0
+            $command += " -PoolSize @("
+            while ($i -lt $count) {
+                $command += $Brokerpowertimescheme.PoolSize[$i]
+                if($i -ne ($count - 1)){
+                    $command += ","
+                } else {
+                    $command += ")"
+                }
+                $i++
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command #| Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new Brokerpowertimescheme" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $Brokerpowertimescheme.Name "already exists. Brokerpowertimescheme won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually Brokerpowertimescheme's properties." -ForegroundColor Yellow
         }
-        $oxmlPublishedAppAdminFolderName = $oxmlPublishedApp.appendChild($Doc.CreateElement("AdminFolderName"))
-        $oxmlPublishedAppAdminFolderName.InnerText = $PublishedApp.AdminFolderName
-        $oxmlPublishedAppApplicationName = $oxmlPublishedApp.appendChild($Doc.CreateElement("ApplicationName"))
-        $oxmlPublishedAppApplicationName.InnerText = $PublishedApp.ApplicationName
-        $oxmlPublishedAppApplicationType = $oxmlPublishedApp.appendChild($Doc.CreateElement("ApplicationType"))
-        $oxmlPublishedAppApplicationType.InnerText = $PublishedApp.ApplicationType
-        $AssociatedDesktopGroupUids = $PublishedApp.AssociatedDesktopGroupUids
-        foreach ($AssociatedDesktopGroupUid in $AssociatedDesktopGroupUids){
-            $oxmlPublishedAppAssociatedDesktopGroupUid = $oxmlPublishedApp.appendChild($Doc.CreateElement("AssociatedDesktopGroupUid"))
-            $oxmlPublishedAppAssociatedDesktopGroupUid.InnerText = $AssociatedDesktopGroupUid
-        }
-        $AssociatedUserFullNames = $PublishedApp.AssociatedUserFullNames
-        foreach ($AssociatedUserFullName in $AssociatedUserFullNames){
-            $oxmlPublishedAppAssociatedUserFullName = $oxmlPublishedApp.appendChild($Doc.CreateElement("AssociatedUserFullName"))
-            $oxmlPublishedAppAssociatedUserFullName.InnerText = $AssociatedUserFullName
-        }
-        $oxmlPublishedAppEnabled = $oxmlPublishedApp.appendChild($Doc.CreateElement("Enabled"))
-        $oxmlPublishedAppEnabled.InnerText = $PublishedApp.Enabled
-        $oxmlPublishedAppMaxPerUserInstances = $oxmlPublishedApp.appendChild($Doc.CreateElement("MaxPerUserInstances"))
-        $oxmlPublishedAppMaxPerUserInstances.InnerText = $PublishedApp.MaxPerUserInstances
-        $oxmlPublishedAppMaxTotalInstances = $oxmlPublishedApp.appendChild($Doc.CreateElement("MaxTotalInstances"))
-        $oxmlPublishedAppMaxTotalInstances.InnerText = $PublishedApp.MaxTotalInstances
-        $oxmlPublishedAppShortcutAddedToDesktop = $oxmlPublishedApp.appendChild($Doc.CreateElement("ShortcutAddedToDesktop"))
-        $oxmlPublishedAppShortcutAddedToDesktop.InnerText = $PublishedApp.ShortcutAddedToDesktop
-        $oxmlPublishedAppShortcutAddedToStartMenu = $oxmlPublishedApp.appendChild($Doc.CreateElement("ShortcutAddedToStartMenu"))
-        $oxmlPublishedAppShortcutAddedToStartMenu.InnerText = $PublishedApp.ShortcutAddedToStartMenu
-        $oxmlPublishedAppStartMenuFolder = $oxmlPublishedApp.appendChild($Doc.CreateElement("StartMenuFolder"))
-        $oxmlPublishedAppStartMenuFolder.InnerText = $PublishedApp.StartMenuFolder
-        $oxmlPublishedAppUserFilterEnabled = $oxmlPublishedApp.appendChild($Doc.CreateElement("UserFilterEnabled"))
-        $oxmlPublishedAppUserFilterEnabled.InnerText = $PublishedApp.UserFilterEnabled
-        $oxmlPublishedAppVisible = $oxmlPublishedApp.appendChild($Doc.CreateElement("Visible"))
-        $oxmlPublishedAppVisible.InnerText = $PublishedApp.Visible
     }
+} else {
+    Write-Host "No Brokerpowertimeschemes to import" -ForegroundColor Yellow
 }
-catch {
-    Write-Host "An error occured while enumerating Published Apps config" -ForegroundColor Red
-    Stop-Transcript
-    break
-} 
-Write-Host "OK" -ForegroundColor Green
 
+#TODO Users,  AccessPolicy
 
-$doc.save("$ExportFile")
 Stop-Transcript
 break
