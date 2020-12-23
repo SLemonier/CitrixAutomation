@@ -301,11 +301,13 @@ try {
         $oxmlCatalogIsRemotePC.InnerText = $Catalog.IsRemotePC
         $oxmlCatalogMachinesArePhysical = $oxmlCatalog.appendChild($Doc.CreateElement("MachinesArePhysical"))
         $oxmlCatalogMachinesArePhysical.InnerText = $Catalog.MachinesArePhysical
-        $oxmlCatalogProvisioningSchemeId = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeName"))
-        $ProvisioningSchemeName = (Get-ProvScheme -ProvisioningSchemeUid $Catalog.ProvisioningSchemeUid).ProvisioningSchemeName
-        $oxmlCatalogProvisioningSchemeId.InnerText = $ProvisioningSchemeName
-        $oxmlCatalogHypervisorConnectionUid = $oxmlCatalog.appendChild($Doc.CreateElement("HypervisorConnectionUid"))
-        $oxmlCatalogHypervisorConnectionUid.InnerText = $Catalog.HypervisorConnectionUid
+        $oxmlCatalogProvisioningSchemeName = $oxmlCatalog.appendChild($Doc.CreateElement("ProvisioningSchemeName"))
+        if($Catalog.ProvisioningSchemeId){ #Does not exist for Non-provisioned catalogs
+            $ProvisioningSchemeName = (Get-ProvScheme -ProvisioningSchemeUid $Catalog.ProvisioningSchemeId).ProvisioningSchemeName
+            $oxmlCatalogProvisioningSchemeNAme.InnerText = $ProvisioningSchemeName
+        }
+        $oxmlCatalogHypervisorConnectionUid = $oxmlCatalog.appendChild($Doc.CreateElement("HypervisorConnectionUid")) #NotUsed
+        $oxmlCatalogHypervisorConnectionUid.InnerText = $Catalog.HypervisorConnectionUid #NotUsed
         $scopes = $Catalog.Scopes
         foreach ($scope in $scopes){
             $oxmlCatalogscope = $oxmlCatalog.appendChild($Doc.CreateElement("scope"))
