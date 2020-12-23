@@ -521,8 +521,8 @@ try {
         if($EntitlementPolicyRule.excludedusers){
             $excludedusers = $EntitlementPolicyRule.excludedusers
             foreach ($excludeduser in $excludedusers){
-                $oxmlEntitlementPolicyRule = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("excludeduser"))
-                $oxmlEntitlementPolicyRule.InnerText = $excludedusers
+                $oxmlEntitlementPolicyRuleExcludedusers = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("excludeduser"))
+                $oxmlEntitlementPolicyRuleExcludedusers.InnerText = $excludeduser.Name
             }
         }
         $oxmlEntitlementPolicyRuleIncludedUserFilterEnabled = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("IncludedUserFilterEnabled"))
@@ -530,8 +530,8 @@ try {
         if($EntitlementPolicyRule.Includedusers){
             $Includedusers = $EntitlementPolicyRule.Includedusers
             foreach ($Includeduser in $Includedusers){
-                $oxmlEntitlementPolicyRule = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Includeduser"))
-                $oxmlEntitlementPolicyRule.InnerText = $Includedusers
+                $oxmlEntitlementPolicyRuleIncludedusers = $oxmlEntitlementPolicyRule.appendChild($Doc.CreateElement("Includeduser"))
+                $oxmlEntitlementPolicyRuleIncludedusers.InnerText = $Includeduser.Name
             }
         }
     }

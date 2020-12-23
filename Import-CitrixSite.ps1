@@ -579,10 +579,10 @@ if($xdoc.site.DeliveryGroups){
                     #No Scope to assign
                 }
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
-                Invoke-Expression $command #| Out-Null
+                Invoke-Expression $command | Out-Null
             }
             catch {
                 Write-Host "An error occured while adding a new DesktopGroup" -ForegroundColor Red
@@ -597,6 +597,97 @@ if($xdoc.site.DeliveryGroups){
     }
 } else {
     Write-Host "No DesktopGroups to import" -ForegroundColor Yellow
+}
+
+################################################################################################
+#Setting EntitlementPolicyRules
+################################################################################################
+
+Write-Host "Setting EntitlementPolicyRules config... "
+if($xdoc.site.EntitlementPolicyRules){
+    $EntitlementPolicyRules = $xdoc.site.EntitlementPolicyRules.EntitlementPolicyRule
+    foreach($EntitlementPolicyRule in $EntitlementPolicyRules){
+        if(!(Get-BrokerEntitlementPolicyRule -Name $EntitlementPolicyRule.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new EntitlementPolicyRule" $EntitlementPolicyRule.Name"... " -NoNewline
+            $command = "New-BrokerEntitlementPolicyRule -Name """ + $EntitlementPolicyRule.Name + """"
+            $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $EntitlementPolicyRule.DesktopGroupName).Uid
+            $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
+            $command += " -Description """ + $EntitlementPolicyRule.Description + """"
+            $command += " -PublishedName """ + $EntitlementPolicyRule.PublishedName + """"
+            if($EntitlementPolicyRule.ExcludedUserFilterEnabled -match "True"){
+                $command += " -ExcludedUserFilterEnabled `$True"
+                try {
+                    $count = $EntitlementPolicyRule.ExcludedUser.count
+                    $i=0
+                    $command += " -ExcludedUsers """
+                    while ($i -lt $count) {
+                        $command += $EntitlementPolicyRule.ExcludedUser[$i]
+                        if($i -ne ($count - 1)){
+                            $command += ""","""
+                        } else {
+                            $command += """"
+                        }
+                        $i++
+                    }
+                }
+                catch {
+                    try { #Only one ExcludedUsers is declared
+                        $command += " -ExcludedUsers """ + $EntitlementPolicyRule.ExcludedUser + """"
+                    }
+                    catch {
+                        #No ExcludedUsers to assign
+                    }
+                }
+            }
+            if($EntitlementPolicyRule.ExcludedUserFilterEnabled -match "False"){
+                $command += " -ExcludedUserFilterEnabled `$False"
+            }
+            if($EntitlementPolicyRule.IncludedUserFilterEnabled -match "True"){
+                $command += " -IncludedUserFilterEnabled `$True"
+                try {
+                    $count = $EntitlementPolicyRule.IncludedUser.count
+                    $i=0
+                    $command += " -IncludedUsers """
+                    while ($i -lt $count) {
+                        $command += $EntitlementPolicyRule.IncludedUser[$i]
+                        if($i -ne ($count - 1)){
+                            $command += ""","""
+                        } else {
+                            $command += """"
+                        }
+                        $i++
+                    }
+                }
+                catch {
+                    try { #Only one IncludedUsers is declared
+                        $command += " -IncludedUsers """ + $EntitlementPolicyRule.IncludedUser + """"
+                    }
+                    catch {
+                        #No IncludedUsers to assign
+                    }
+                }
+            }
+            if($EntitlementPolicyRule.IncludedUserFilterEnabled -match "False"){
+                $command += " -IncludedUserFilterEnabled `$False"
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command #| Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new EntitlementPolicyRule" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $EntitlementPolicyRule.Name "already exists. EntitlementPolicyRule won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually EntitlementPolicyRule's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No EntitlementPolicyRules to import" -ForegroundColor Yellow
 }
 
 Stop-Transcript
