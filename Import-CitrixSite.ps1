@@ -822,10 +822,10 @@ if($xdoc.site.BrokeraccesspolicyRules){
                     #No IncludedUsers to assign
                 }
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
-                Invoke-Expression $command #| Out-Null
+                Invoke-Expression $command | Out-Null
             }
             catch {
                 Write-Host "An error occured while adding a new BrokeraccesspolicyRule" -ForegroundColor Red
@@ -842,7 +842,55 @@ if($xdoc.site.BrokeraccesspolicyRules){
     Write-Host "No BrokeraccesspolicyRules to import" -ForegroundColor Yellow
 }
 
-#TODO Users,  AccessPolicy
+################################################################################################
+#Setting Brokerrebootschedules
+################################################################################################
+
+Write-Host "Setting Brokerrebootschedules config... "
+if($xdoc.site.Brokerrebootschedules){
+    $Brokerrebootschedules = $xdoc.site.Brokerrebootschedules.Brokerrebootschedule
+    foreach($Brokerrebootschedule in $Brokerrebootschedules){
+        if(!(Get-BrokerrebootscheduleV2 -Name $Brokerrebootschedule.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new Brokerrebootschedule" $Brokerrebootschedule.Name"... " -NoNewline
+            $command = "New-BrokerrebootscheduleV2 -Name """ + $Brokerrebootschedule.Name + """"
+            $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $Brokerrebootschedule.DesktopGroupName).Uid
+            $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
+            $command += " -RebootDuration """ + $Brokerrebootschedule.RebootDuration + """"
+            $command += " -Day """ + $Brokerrebootschedule.Day + """"
+            $command += " -Description """ + $Brokerrebootschedule.Description + """"
+            $command += " -Frequency """ + $Brokerrebootschedule.Frequency + """"
+            $command += " -StartTime """ + $Brokerrebootschedule.StartTime + """"
+            $command += " -WarningDuration """ + $Brokerrebootschedule.WarningDuration + """"
+            $command += " -WarningMessage """ + $Brokerrebootschedule.WarningMessage + """"
+            $command += " -WarningRepeatInterval """ + $Brokerrebootschedule.WarningRepeatInterval + """"
+            $command += " -WarningTitle """ + $Brokerrebootschedule.WarningTitle + """"
+            if($Brokerrebootschedule.Enabled -match "True"){
+                $command += " -Enabled `$True"
+            }
+            if($Brokerrebootschedule.Enabled -match "False"){
+                $command += " -Enabled `$False"
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command #| Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new Brokerrebootschedule" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $Brokerpowertimescheme.Name "already exists. Brokerrebootschedule won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually Brokerrebootschedule's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No Brokerrebootschedules to import" -ForegroundColor Yellow
+}
+
+#TODO Delivering status once machines added?
 
 Stop-Transcript
 break
