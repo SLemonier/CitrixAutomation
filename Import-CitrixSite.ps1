@@ -904,7 +904,6 @@ if($xdoc.site.PublishedApps){
             Write-host "Adding new PublishedApp" $PublishedApp.Name"... " -NoNewline
             $command = "New-Brokerapplication -Name """ + $PublishedApp.PublishedName + """"
             $command += " -CommandLineExecutable """ + $PublishedApp.CommandLineExecutable + """"
-            
             $j=0
             try {
                 $countj = $PublishedApp.AssociatedDesktopGroupName.count
@@ -968,11 +967,10 @@ if($xdoc.site.PublishedApps){
                 $command += " -Visible `$False"
             }
             $command += " -WorkingDirectory """ + $PublishedApp.WorkingDirectory + """"
-            
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
-                $App = Invoke-Expression $command #| Out-Null
+                $App = Invoke-Expression $command
                 try {
                     $count = $PublishedApp.AssociatedUserFullName.count
                     $i=0
@@ -1013,8 +1011,43 @@ if($xdoc.site.PublishedApps){
     Write-Host "No PublishedApps to import" -ForegroundColor Yellow
 }
 
+################################################################################################
+#Setting FileTypeAssociations
+################################################################################################
+
+Write-Host "Setting FileTypeAssociations config... "a
+if($xdoc.site.FileTypeAssociations){
+    $FileTypeAssociations = $xdoc.site.FileTypeAssociations.FileTypeAssociation
+    foreach($FileTypeAssociation in $FileTypeAssociations){
+        $AppUid = (Get-BrokerApplication -Name $FileTypeAssociation.Name).Uid
+        if(!(Get-BrokerConfiguredFTA -ApplicationUid $AppUid -ContentType $FileTypeAssociation.ContentType -ExtensionName $FileTypeAssociation.ExtensionName -errorAction SilentlyContinue)){
+            Write-host "Adding new FTA for" $FileTypeAssociation.Name" and" $FileTypeAssociation.ExtensionName"... " -NoNewline
+            $command = "New-Brokerconfiguredfta -ApplicationUid """ + $AppUid + """"
+            $command += " -ExtensionName """ + $FileTypeAssociation.ExtensionName + """"
+            $command += " -HandlerName """ + $FileTypeAssociation.HandlerName + """"
+            $command += " -ContentType """ + $FileTypeAssociation.ContentType + """"
+            #Write-host $command
+            #pause
+            try{
+                Invoke-Expression $command | Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new FileTypeAssociation" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $FileTypeAssociation.Name "already exists. FileTypeAssociation won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually FileTypeAssociation's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No FileTypeAssociations to import" -ForegroundColor Yellow
+}
+
 #TODO Delivering status once machines added?
-#New-BrokerConfiguredFTA
+
 
 Stop-Transcript
 break
