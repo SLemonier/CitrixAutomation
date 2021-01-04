@@ -884,12 +884,105 @@ if($xdoc.site.Brokerrebootschedules){
             }
             Write-Host "OK" -ForegroundColor Green
         } else {
-            Write-Host $Brokerpowertimescheme.Name "already exists. Brokerrebootschedule won't be modified by this script." -ForegroundColor Yellow
+            Write-Host $Brokerrebootschedule.Name "already exists. Brokerrebootschedule won't be modified by this script." -ForegroundColor Yellow
             Write-Host "Check manually Brokerrebootschedule's properties." -ForegroundColor Yellow
         }
     }
 } else {
     Write-Host "No Brokerrebootschedules to import" -ForegroundColor Yellow
+}
+
+################################################################################################
+#Setting PublishedApps
+################################################################################################
+
+Write-Host "Setting PublishedApps config... "
+if($xdoc.site.PublishedApps){
+    $PublishedApps = $xdoc.site.PublishedApps.PublishedApp
+    foreach($PublishedApp in $PublishedApps){
+        if(!(Get-Brokerapplication -Name $PublishedApp.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new PublishedApp" $PublishedApp.Name"... " -NoNewline
+            $command = "New-Brokerapplication -Name """ + $PublishedApp.Name + """"
+            $command += " -CommandLineExecutable """ + $PublishedApp.CommandLineExecutable + """"
+            $command += " -DesktopGroup """ + $PublishedApp.AssociatedDesktopGroupName + """"
+            $command += " -AdminFolder """ + $PublishedApp.AdminFolderName + """"
+            $command += " -ApplicationType """ + $PublishedApp.ApplicationType + """"
+            $command += " -CommandLineArguments """ + $PublishedApp.CommandLineArguments + """"
+            $command += " -Description """ + $PublishedApp.Description + """"
+            if($PublishedApp.Enabled -match "True"){
+                $command += " -Enabled `$True"
+            }
+            if($PublishedApp.Enabled -match "False"){
+                $command += " -Enabled `$False"
+            }
+            $IconPath = "./resources/" + $PublishedApp.iconuid + ".txt"
+            $EncodedData = Get-Content $IconPath
+            $Icon = New-BrokerIcon -EncodedIconData $EncodedData
+            $command += " -IconUid """ + $Icon.Uid + """"
+            $command += " -MaxPerUserInstances """ + $PublishedApp.MaxPerUserInstances + """"
+            $command += " -MaxTotalInstances """ + $PublishedApp.MaxTotalInstances + """"
+            $command += " -PublishedName """ + $PublishedApp.PublishedName + """"
+            if($PublishedApp.ShortcutAddedToDesktop -match "True"){
+                $command += " -ShortcutAddedToDesktop `$True"
+            }
+            if($PublishedApp.ShortcutAddedToDesktop -match "False"){
+                $command += " -ShortcutAddedToDesktop `$False"
+            }
+            if($PublishedApp.ShortcutAddedToStartMenu -match "True"){
+                $command += " -ShortcutAddedToStartMenu `$True"
+            }
+            if($PublishedApp.ShortcutAddedToStartMenu -match "False"){
+                $command += " -ShortcutAddedToStartMenu `$False"
+            }
+            $command += " -StartMenuFolder """ + $PublishedApp.StartMenuFolder + """"
+            if($PublishedApp.UserFilterEnabled -match "True"){
+                $command += " -UserFilterEnabled `$True"
+            }
+            if($PublishedApp.UserFilterEnabled -match "False"){
+                $command += " -UserFilterEnabled `$False"
+            }
+            if($PublishedApp.Visible -match "True"){
+                $command += " -Visible `$True"
+            }
+            if($PublishedApp.Visible -match "False"){
+                $command += " -Visible `$False"
+            }
+            $command += " -WorkingDirectory """ + $PublishedApp.WorkingDirectory + """"
+            try {
+                $count = $PublishedApp.AssociatedUserFullName.count
+                $i=0
+                while ($i -lt $count) {
+                    if(!(Get-BrokerUser -Name $PublishedApp.AssociatedUserFullName -errorAction SilentlyContinue)){
+                        New-BrokerUser -Name $PublishedApp.AssociatedUserFullName 
+                    }
+                    Add-BrokerUser -Name $PublishedApp.AssociatedUserFullName -ApplicationName $PublishedApp.Name
+                    $i++
+                }
+            }
+            catch {
+                if(!(Get-BrokerUser -Name $PublishedApp.AssociatedUserFullName -errorAction SilentlyContinue)){
+                    New-BrokerUser -Name $PublishedApp.AssociatedUserFullName 
+                }
+                Add-BrokerUser -Name $PublishedApp.AssociatedUserFullName -ApplicationName $PublishedApp.Name
+            }
+            write-host $command
+            Pause
+            try {
+                Invoke-Expression $command #| Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new PublishedApp" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $PublishedApp.Name "already exists. PublishedApp won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually PublishedApp's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No PublishedApps to import" -ForegroundColor Yellow
 }
 
 #TODO Delivering status once machines added?
