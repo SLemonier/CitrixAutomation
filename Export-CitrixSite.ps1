@@ -743,6 +743,33 @@ catch {
 } 
 Write-Host "OK" -ForegroundColor Green
 
+################################################################################################
+#Enumerating FileTypeAssociations
+################################################################################################
+
+Write-Host "Enumerating FileTypeAssociations config... " -NoNewline
+try {
+    $oXMLFileTypeAssociations = $oXMLRoot.appendChild($Doc.CreateElement("FileTypeAssociations"))
+    $FileTypeAssociations = Get-BrokerConfiguredFTA
+    foreach ($FileTypeAssociation in $FileTypeAssociations) {
+        $oXMLFileTypeAssociation = $oXMLFileTypeAssociations.appendChild($Doc.CreateElement("FileTypeAssociation"))
+        $Application= (Get-BrokerApplication -Uid $FileTypeAssociation.Uid).PublishedName
+        $oXMLFileTypeAssociationApplication = $oXMLFileTypeAssociation.appendChild($Doc.CreateElement("Application"))
+        $oXMLFileTypeAssociationApplication.InnerText = $Application
+        $oXMLFileTypeAssociationContentType = $oXMLFileTypeAssociation.appendChild($Doc.CreateElement("ContentType"))
+        $oXMLFileTypeAssociationContentType.InnerText = $FileTypeAssociation.ContentType
+        $oXMLFileTypeAssociationExtensionName = $oXMLFileTypeAssociation.appendChild($Doc.CreateElement("ExtensionName"))
+        $oXMLFileTypeAssociationExtensionName.InnerText = $FileTypeAssociation.ExtensionName
+        $oXMLFileTypeAssociationHandlerName = $oXMLFileTypeAssociation.appendChild($Doc.CreateElement("HandlerName"))
+        $oXMLFileTypeAssociationHandlerName.InnerText = $FileTypeAssociation.HandlerName
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating FileTypeAssociations config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
 
 $doc.save("$ExportFile")
 Stop-Transcript
