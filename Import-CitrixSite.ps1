@@ -952,8 +952,8 @@ if($xdoc.site.PublishedApps){
                 $count = $PublishedApp.AssociatedUserFullName.count
                 $i=0
                 while ($i -lt $count) {
-                    if(!(Get-BrokerUser -Name $PublishedApp.AssociatedUserFullName -errorAction SilentlyContinue)){
-                        New-BrokerUser -Name $PublishedApp.AssociatedUserFullName 
+                    if(!(Get-BrokerUser -Name $PublishedApp.AssociatedUserFullName[$i] -errorAction SilentlyContinue)){
+                        New-BrokerUser -Name $PublishedApp.AssociatedUserFullName [$i]
                     }
                     Add-BrokerUser -Name $PublishedApp.AssociatedUserFullName -ApplicationName $PublishedApp.Name
                     $i++
