@@ -709,8 +709,9 @@ try {
         $oxmlPublishedAppApplicationType.InnerText = $PublishedApp.ApplicationType
         $AssociatedDesktopGroupUids = $PublishedApp.AssociatedDesktopGroupUids
         foreach ($AssociatedDesktopGroupUid in $AssociatedDesktopGroupUids){
-            $oxmlPublishedAppAssociatedDesktopGroupUid = $oxmlPublishedApp.appendChild($Doc.CreateElement("AssociatedDesktopGroupUid"))
-            $oxmlPublishedAppAssociatedDesktopGroupUid.InnerText = $AssociatedDesktopGroupUid
+            $oxmlPublishedAppAssociatedDesktopGroupName = $oxmlPublishedApp.appendChild($Doc.CreateElement("AssociatedDesktopGroupName"))
+            $DesktopGroupName = (Get-BrokerDesktopGroup -Uid $AssociatedDesktopGroupUid).Name
+            $oxmlPublishedAppAssociatedDesktopGroupName.InnerText = $DesktopGroupName
         }
         $AssociatedUserFullNames = $PublishedApp.AssociatedUserFullNames
         foreach ($AssociatedUserFullName in $AssociatedUserFullNames){
