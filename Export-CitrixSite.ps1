@@ -753,7 +753,7 @@ try {
     $FileTypeAssociations = Get-BrokerConfiguredFTA
     foreach ($FileTypeAssociation in $FileTypeAssociations) {
         $oXMLFileTypeAssociation = $oXMLFileTypeAssociations.appendChild($Doc.CreateElement("FileTypeAssociation"))
-        $Application= (Get-BrokerApplication -Uid $FileTypeAssociation.Uid).PublishedName
+        $Application= (Get-BrokerApplication -Uid $FileTypeAssociation.ApplicationUid).PublishedName
         $oXMLFileTypeAssociationApplication = $oXMLFileTypeAssociation.appendChild($Doc.CreateElement("Application"))
         $oXMLFileTypeAssociationApplication.InnerText = $Application
         $oXMLFileTypeAssociationContentType = $oXMLFileTypeAssociation.appendChild($Doc.CreateElement("ContentType"))
