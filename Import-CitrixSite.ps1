@@ -902,12 +902,32 @@ if($xdoc.site.PublishedApps){
     foreach($PublishedApp in $PublishedApps){
         if(!(Get-Brokerapplication -Name $PublishedApp.Name -errorAction SilentlyContinue)){
             Write-host "Adding new PublishedApp" $PublishedApp.Name"... " -NoNewline
-            $command = "New-Brokerapplication -Name """ + $PublishedApp.Name + """"
+            $command = "New-Brokerapplication -Name """ + $PublishedApp.PublishedName + """"
             $command += " -CommandLineExecutable """ + $PublishedApp.CommandLineExecutable + """"
-            $command += " -DesktopGroup """ + $PublishedApp.AssociatedDesktopGroupName + """"
+            
+            $j=0
+            try {
+                $countj = $PublishedApp.AssociatedDesktopGroupName.count
+                $command += " -DesktopGroup """ + $PublishedApp.AssociatedDesktopGroupName[$j] + """"
+                $j++
+            }
+            catch {
+                $command += " -DesktopGroup """ + $PublishedApp.AssociatedDesktopGroupName + """"
+            }
+            if(!(Get-BrokerAdminFolder -Name $PublishedApp.AdminFolderName -errorAction SilentlyContinue)){
+                New-BrokerAdminFolder -FolderName $PublishedApp.AdminFolderName.Replace("\","") | Out-Null
+            }
             $command += " -AdminFolder """ + $PublishedApp.AdminFolderName + """"
             $command += " -ApplicationType """ + $PublishedApp.ApplicationType + """"
-            $command += " -CommandLineArguments """ + $PublishedApp.CommandLineArguments + """"
+            if($PublishedApp.CommandLineArguments -match "%" -and $PublishedApp.CommandLineArguments -notlike "%*"){
+                $command += " -CommandLineArguments """ + "```"%*``"""""
+            } else {
+                if($PublishedApp.CommandLineArguments -match "%" -and $PublishedApp.CommandLineArguments -notlike "%*"){
+                    $command += " -CommandLineArguments " + $PublishedApp.CommandLineArguments + ""
+                } else {
+                    $command += " -CommandLineArguments """ + $PublishedApp.CommandLineArguments.Replace("`"","```"") + """"
+                }
+            }
             $command += " -Description """ + $PublishedApp.Description + """"
             if($PublishedApp.Enabled -match "True"){
                 $command += " -Enabled `$True"
@@ -948,27 +968,35 @@ if($xdoc.site.PublishedApps){
                 $command += " -Visible `$False"
             }
             $command += " -WorkingDirectory """ + $PublishedApp.WorkingDirectory + """"
-            try {
-                $count = $PublishedApp.AssociatedUserFullName.count
-                $i=0
-                while ($i -lt $count) {
-                    if(!(Get-BrokerUser -Name $PublishedApp.AssociatedUserFullName[$i] -errorAction SilentlyContinue)){
-                        New-BrokerUser -Name $PublishedApp.AssociatedUserFullName [$i]
-                    }
-                    Add-BrokerUser -Name $PublishedApp.AssociatedUserFullName -ApplicationName $PublishedApp.Name
-                    $i++
-                }
-            }
-            catch {
-                if(!(Get-BrokerUser -Name $PublishedApp.AssociatedUserFullName -errorAction SilentlyContinue)){
-                    New-BrokerUser -Name $PublishedApp.AssociatedUserFullName 
-                }
-                Add-BrokerUser -Name $PublishedApp.AssociatedUserFullName -ApplicationName $PublishedApp.Name
-            }
+            
             write-host $command
             Pause
             try {
-                Invoke-Expression $command #| Out-Null
+                $App = Invoke-Expression $command #| Out-Null
+                try {
+                    $count = $PublishedApp.AssociatedUserFullName.count
+                    $i=0
+                    while ($i -lt $count) {
+                        $AssociatedUserFullName = "$env:USERDOMAIN\" + $PublishedApp.AssociatedUserFullName[$i]
+                        Add-BrokerUser -Name $AssociatedUserFullName -Application $App
+                        $i++
+                    }
+                }
+                catch {
+                    try{
+                        $AssociatedUserFullName = "$env:USERDOMAIN\" + $PublishedApp.AssociatedUserFullName
+                        Add-BrokerUser -Name $AssociatedUserFullName -Application $App
+                    }
+                    catch {
+                        #No User to assign to
+                    }
+                }
+                if($j -ne 0){
+                    while($j -lt $countj){
+                        Add-BrokerApplication $App -DesktopGroup $PublishedApp.AssociatedDesktopGroupName[$j]
+                        $j++
+                    }
+                }
             }
             catch {
                 Write-Host "An error occured while adding a new PublishedApp" -ForegroundColor Red
@@ -986,6 +1014,7 @@ if($xdoc.site.PublishedApps){
 }
 
 #TODO Delivering status once machines added?
+#New-BrokerConfiguredFTA
 
 Stop-Transcript
 break
