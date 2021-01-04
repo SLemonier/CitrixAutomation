@@ -291,7 +291,7 @@ if($xdoc.site.administrators){
 ################################################################################################
 #Setting AcctIdentityPool
 ################################################################################################
-<#
+
 Write-Host "Setting AcctIdentityPool config... "
 if($xdoc.site.AcctIdentityPools){
     $AcctIdentityPools = $xdoc.site.AcctIdentityPools.AcctIdentityPool
@@ -344,12 +344,11 @@ if($xdoc.site.AcctIdentityPools){
 } else {
     Write-Host "No AcctIdentityPools to import" -ForegroundColor Yellow
 }
-#>
+
 ################################################################################################
 #Setting ProvSchemes
 ################################################################################################
 
-<#
 Write-Host "Setting ProvSchemes config... "
 if($xdoc.site.provschemes){
     $provschemes = $xdoc.site.provschemes.provscheme
@@ -415,11 +414,11 @@ if($xdoc.site.provschemes){
 } else {
     Write-Host "No ProvSchemes to import" -ForegroundColor Yellow
 }
-#>
+
 ################################################################################################
 #Setting Catalogs
 ################################################################################################
-<#
+
 Write-Host "Setting Catalogs config... "
 if($xdoc.site.Catalogs){
     $Catalogs = $xdoc.site.Catalogs.Catalog
@@ -489,11 +488,11 @@ if($xdoc.site.Catalogs){
 } else {
     Write-Host "No Catalogs to import" -ForegroundColor Yellow
 }
-#>
+
 ################################################################################################
 #Setting DesktopGroups
 ################################################################################################
-<#
+
 Write-Host "Setting DesktopGroups config... "
 if($xdoc.site.DeliveryGroups){
     $DesktopGroups = $xdoc.site.DeliveryGroups.DeliveryGroup
@@ -597,11 +596,11 @@ if($xdoc.site.DeliveryGroups){
 } else {
     Write-Host "No DesktopGroups to import" -ForegroundColor Yellow
 }
-#>
+
 ################################################################################################
 #Setting EntitlementPolicyRules
 ################################################################################################
-<#
+
 Write-Host "Setting EntitlementPolicyRules config... "
 if($xdoc.site.EntitlementPolicyRules){
     $EntitlementPolicyRules = $xdoc.site.EntitlementPolicyRules.EntitlementPolicyRule
@@ -688,7 +687,7 @@ if($xdoc.site.EntitlementPolicyRules){
 } else {
     Write-Host "No EntitlementPolicyRules to import" -ForegroundColor Yellow
 }
-#>
+
 ################################################################################################
 #Setting Brokerpowertimeschemes
 ################################################################################################
@@ -1019,9 +1018,9 @@ Write-Host "Setting FileTypeAssociations config... "a
 if($xdoc.site.FileTypeAssociations){
     $FileTypeAssociations = $xdoc.site.FileTypeAssociations.FileTypeAssociation
     foreach($FileTypeAssociation in $FileTypeAssociations){
-        $AppUid = (Get-BrokerApplication -Name $FileTypeAssociation.Name).Uid
+        $AppUid = (Get-BrokerApplication -PublishedName $FileTypeAssociation.Application).Uid
         if(!(Get-BrokerConfiguredFTA -ApplicationUid $AppUid -ContentType $FileTypeAssociation.ContentType -ExtensionName $FileTypeAssociation.ExtensionName -errorAction SilentlyContinue)){
-            Write-host "Adding new FTA for" $FileTypeAssociation.Name" and" $FileTypeAssociation.ExtensionName"... " -NoNewline
+            Write-host "Adding new FTA for" $FileTypeAssociation.Application" and" $FileTypeAssociation.ExtensionName"... " -NoNewline
             $command = "New-Brokerconfiguredfta -ApplicationUid """ + $AppUid + """"
             $command += " -ExtensionName """ + $FileTypeAssociation.ExtensionName + """"
             $command += " -HandlerName """ + $FileTypeAssociation.HandlerName + """"
@@ -1047,7 +1046,7 @@ if($xdoc.site.FileTypeAssociations){
 }
 
 #TODO Delivering status once machines added?
-
+#TODO Assign RemotePC
 
 Stop-Transcript
 break
