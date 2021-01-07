@@ -689,6 +689,70 @@ if($xdoc.site.EntitlementPolicyRules){
 }
 
 ################################################################################################
+#Setting BrokerAppEntitlementPolicyRules
+################################################################################################
+
+Write-Host "Setting BrokerAppEntitlementPolicyRules config... "
+if($xdoc.site.BrokerAppEntitlementPolicyRules){
+    $BrokerAppEntitlementPolicyRules = $xdoc.site.BrokerAppEntitlementPolicyRules.BrokerAppEntitlementPolicyRule
+    foreach($BrokerAppEntitlementPolicyRule in $BrokerAppEntitlementPolicyRules){
+        if(!(Get-BrokerAppEntitlementPolicyRule -Name $BrokerAppEntitlementPolicyRule.Name -errorAction SilentlyContinue)){
+            Write-host "Adding new BrokerAppEntitlementPolicyRule" $BrokerAppEntitlementPolicyRule.Name"... " -NoNewline
+            $command = "New-BrokerAppEntitlementPolicyRule -Name """ + $BrokerAppEntitlementPolicyRule.Name + """"
+            $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $BrokerAppEntitlementPolicyRule.DesktopGroupName).Uid
+            $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
+            $command += " -Description """ + $BrokerAppEntitlementPolicyRule.Description + """"
+            if($BrokerAppEntitlementPolicyRule.Enabled -match "False"){
+                $command += " -Enabled `$False"
+            }
+            if($BrokerAppEntitlementPolicyRule.Enabled -match "True"){
+                $command += " -Enabled `$True"
+            }
+            if($BrokerAppEntitlementPolicyRule.LeasingBehavior -match "False"){
+                $command += " -LeasingBehavior `$False"
+            }
+            if($BrokerAppEntitlementPolicyRule.LeasingBehavior -match "True"){
+                $command += " -LeasingBehavior `$True"
+            }
+            if($BrokerAppEntitlementPolicyRule.SessionReconnection -match "False"){
+                $command += " -SessionReconnection `$False"
+            }
+            if($BrokerAppEntitlementPolicyRule.SessionReconnection -match "True"){
+                $command += " -SessionReconnection `$True"
+            }
+            if($BrokerAppEntitlementPolicyRule.ExcludedUserFilterEnable -match "False"){
+                $command += " -ExcludedUserFilterEnable `$False"
+            }
+            if($BrokerAppEntitlementPolicyRule.ExcludedUserFilterEnable -match "True"){
+                $command += " -ExcludedUserFilterEnable `$True"
+            }
+            if($BrokerAppEntitlementPolicyRule.IncludedUserFilterEnable -match "False"){
+                $command += " -IncludedUserFilterEnable `$False"
+            }
+            if($BrokerAppEntitlementPolicyRule.IncludedUserFilterEnable -match "True"){
+                $command += " -IncludedUserFilterEnable `$True"
+            }
+            #write-host $command
+            #Pause
+            try {
+                Invoke-Expression $command | Out-Null
+            }
+            catch {
+                Write-Host "An error occured while adding a new BrokerAppEntitlementPolicyRule" -ForegroundColor Red
+                Stop-Transcript
+                break
+            }
+            Write-Host "OK" -ForegroundColor Green
+        } else {
+            Write-Host $BrokerAppEntitlementPolicyRule.Name "already exists. BrokerAppEntitlementPolicyRule won't be modified by this script." -ForegroundColor Yellow
+            Write-Host "Check manually BrokerAppEntitlementPolicyRule's properties." -ForegroundColor Yellow
+        }
+    }
+} else {
+    Write-Host "No BrokerAppEntitlementPolicyRules to import" -ForegroundColor Yellow
+}
+
+################################################################################################
 #Setting Brokerpowertimeschemes
 ################################################################################################
 
