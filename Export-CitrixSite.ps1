@@ -641,7 +641,7 @@ try {
         $oxmlBrokerAppEntitlementPolicyRuleName = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Name"))
         $oxmlBrokerAppEntitlementPolicyRuleName.InnerText = $BrokerAppEntitlementPolicyRule.Name
         $oxmlBrokerAppEntitlementPolicyRuleDesktopGroupName = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("DesktopGroupName"))
-        $oxmlBrokerAppEntitlementPolicyRuleDesktopGroupName.InnerText = (Get-BrokerDesktopGroup -Uid $BrokeraccesspolicyRule.DesktopGroupUid).Name
+        $oxmlBrokerAppEntitlementPolicyRuleDesktopGroupName.InnerText = (Get-BrokerDesktopGroup -Uid $BrokerAppEntitlementPolicyRule.DesktopGroupUid).Name
         $oxmlBrokerAppEntitlementPolicyRuleDescription = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Description"))
         $oxmlBrokerAppEntitlementPolicyRuleDescription.InnerText = $BrokerAppEntitlementPolicyRule.Description
         $oxmlBrokerAppEntitlementPolicyRuleEnabled = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Enabled"))
