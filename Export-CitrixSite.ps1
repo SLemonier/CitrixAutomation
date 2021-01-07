@@ -635,7 +635,7 @@ Write-Host "OK" -ForegroundColor Green
 Write-Host "Enumerating BrokerAppEntitlementPolicyRules config... " -NoNewline
 try {
     $oXMLBrokerAppEntitlementPolicyRules = $oXMLRoot.appendChild($Doc.CreateElement("BrokerAppEntitlementPolicyRules"))
-    $BrokerAppEntitlementPolicyRules = Get-BrokerAppEntitlementPolicyRules
+    $BrokerAppEntitlementPolicyRules = Get-BrokerAppEntitlementPolicyRule
     foreach ($BrokerAppEntitlementPolicyRule in $BrokerAppEntitlementPolicyRules) {
         $oxmlBrokerAppEntitlementPolicyRule = $oXMLBrokerAppEntitlementPolicyRules.appendChild($Doc.CreateElement("BrokerAppEntitlementPolicyRule"))
         $oxmlBrokerAppEntitlementPolicyRuleName = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Name"))
@@ -651,9 +651,9 @@ try {
         $oxmlBrokerAppEntitlementPolicyRuleSessionReconnection = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("SessionReconnection"))
         $oxmlBrokerAppEntitlementPolicyRuleSessionReconnection.InnerText = $BrokerAppEntitlementPolicyRule.SessionReconnection
         $oxmlBrokerAppEntitlementPolicyRuleExcludedUserFilterEnable = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("ExcludedUserFilterEnable"))
-        $oxmlBrokerAppEntitlementPolicyRuleExcludedUserFilterEnable.InnerText = $BrokerAppEntitlementPolicyRule.ExcludedUserFilterEnable
+        $oxmlBrokerAppEntitlementPolicyRuleExcludedUserFilterEnable.InnerText = $BrokerAppEntitlementPolicyRule.ExcludedUserFilterEnabled
         $oxmlBrokerAppEntitlementPolicyRuleIncludedUserFilterEnable = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("IncludedUserFilterEnable"))
-        $oxmlBrokerAppEntitlementPolicyRuleIncludedUserFilterEnable.InnerText = $BrokerAppEntitlementPolicyRule.IncludedUserFilterEnable
+        $oxmlBrokerAppEntitlementPolicyRuleIncludedUserFilterEnable.InnerText = $BrokerAppEntitlementPolicyRule.IncludedUserFilterEnabled
     }
 }
 catch {
