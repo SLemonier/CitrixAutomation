@@ -629,6 +629,41 @@ catch {
 Write-Host "OK" -ForegroundColor Green
 
 ################################################################################################
+#Enumerating BrokerAppEntitlementPolicyRules
+################################################################################################
+
+Write-Host "Enumerating BrokerAppEntitlementPolicyRules config... " -NoNewline
+try {
+    $oXMLBrokerAppEntitlementPolicyRules = $oXMLRoot.appendChild($Doc.CreateElement("BrokerAppEntitlementPolicyRules"))
+    $BrokerAppEntitlementPolicyRules = Get-BrokerAppEntitlementPolicyRules
+    foreach ($BrokerAppEntitlementPolicyRule in $BrokerAppEntitlementPolicyRules) {
+        $oxmlBrokerAppEntitlementPolicyRule = $oXMLBrokerAppEntitlementPolicyRules.appendChild($Doc.CreateElement("BrokerAppEntitlementPolicyRule"))
+        $oxmlBrokerAppEntitlementPolicyRuleName = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Name"))
+        $oxmlBrokerAppEntitlementPolicyRuleName.InnerText = $BrokerAppEntitlementPolicyRule.Name
+        $oxmlBrokerAppEntitlementPolicyRuleDesktopGroupName = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("DesktopGroupName"))
+        $oxmlBrokerAppEntitlementPolicyRuleDesktopGroupName.InnerText = (Get-BrokerDesktopGroup -Uid $BrokeraccesspolicyRule.DesktopGroupUid).Name
+        $oxmlBrokerAppEntitlementPolicyRuleDescription = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Description"))
+        $oxmlBrokerAppEntitlementPolicyRuleDescription.InnerText = $BrokerAppEntitlementPolicyRule.Description
+        $oxmlBrokerAppEntitlementPolicyRuleEnabled = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("Enabled"))
+        $oxmlBrokerAppEntitlementPolicyRuleEnabled.InnerText = $BrokerAppEntitlementPolicyRule.Enabled
+        $oxmlBrokerAppEntitlementPolicyRuleLeasingBehavior = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("LeasingBehavior"))
+        $oxmlBrokerAppEntitlementPolicyRuleLeasingBehavior.InnerText = $BrokerAppEntitlementPolicyRule.LeasingBehavior
+        $oxmlBrokerAppEntitlementPolicyRuleSessionReconnection = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("SessionReconnection"))
+        $oxmlBrokerAppEntitlementPolicyRuleSessionReconnection.InnerText = $BrokerAppEntitlementPolicyRule.SessionReconnection
+        $oxmlBrokerAppEntitlementPolicyRuleExcludedUserFilterEnable = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("ExcludedUserFilterEnable"))
+        $oxmlBrokerAppEntitlementPolicyRuleExcludedUserFilterEnable.InnerText = $BrokerAppEntitlementPolicyRule.ExcludedUserFilterEnable
+        $oxmlBrokerAppEntitlementPolicyRuleIncludedUserFilterEnable = $oxmlBrokerAppEntitlementPolicyRule.appendChild($Doc.CreateElement("IncludedUserFilterEnable"))
+        $oxmlBrokerAppEntitlementPolicyRuleIncludedUserFilterEnable.InnerText = $BrokerAppEntitlementPolicyRule.IncludedUserFilterEnable
+    }
+}
+catch {
+    Write-Host "An error occured while enumerating BrokerAppEntitlementPolicyRules config" -ForegroundColor Red
+    Stop-Transcript
+    break
+} 
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
 #Enumerating Brokerrebootschedule
 ################################################################################################
 
