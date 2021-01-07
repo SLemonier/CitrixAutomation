@@ -836,7 +836,7 @@ if($xdoc.site.BrokeraccesspolicyRules){
             $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $BrokeraccesspolicyRule.DesktopGroupName).Uid
             $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
             $command += " -AllowedConnections """ + $BrokeraccesspolicyRule.AllowedConnections + """"
-            $command += " -AllowedProtocols @(" + $BrokeraccesspolicyRule.AllowedProtocols.Replace(" ",""",""") + """"
+            $command += " -AllowedProtocols @(""" + $BrokeraccesspolicyRule.AllowedProtocols.Replace(" ",""",""") + """)"
             $command += " -AllowedUsers """ + $BrokeraccesspolicyRule.AllowedUsers + """"
             $command += " -Description """ + $BrokeraccesspolicyRule.Description + """"
             if($BrokeraccesspolicyRule.AllowRestart -match "True"){
@@ -938,7 +938,7 @@ if($xdoc.site.Brokerrebootschedules){
             #write-host $command
             #Pause
             try {
-                Invoke-Expression $command #| Out-Null
+                Invoke-Expression $command | Out-Null
             }
             catch {
                 Write-Host "An error occured while adding a new Brokerrebootschedule" -ForegroundColor Red
