@@ -836,7 +836,7 @@ if($xdoc.site.BrokeraccesspolicyRules){
             $DesktopGroupUid = (Get-BrokerDesktopGroup -Name $BrokeraccesspolicyRule.DesktopGroupName).Uid
             $command += " -DesktopGroupUid """ + $DesktopGroupUid + """"
             $command += " -AllowedConnections """ + $BrokeraccesspolicyRule.AllowedConnections + """"
-            $command += " -AllowedProtocols """ + $BrokeraccesspolicyRule.AllowedProtocols + """"
+            $command += " -AllowedProtocols @(" + $BrokeraccesspolicyRule.AllowedProtocols.Replace(" ",""",""") + """"
             $command += " -AllowedUsers """ + $BrokeraccesspolicyRule.AllowedUsers + """"
             $command += " -Description """ + $BrokeraccesspolicyRule.Description + """"
             if($BrokeraccesspolicyRule.AllowRestart -match "True"){
@@ -935,8 +935,8 @@ if($xdoc.site.Brokerrebootschedules){
             if($Brokerrebootschedule.Enabled -match "False"){
                 $command += " -Enabled `$False"
             }
-            write-host $command
-            Pause
+            #write-host $command
+            #Pause
             try {
                 Invoke-Expression $command #| Out-Null
             }
