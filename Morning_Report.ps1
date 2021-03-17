@@ -20,13 +20,48 @@
 
 [CmdletBinding()]
 Param(
-    # Declaring input variables for the script
+    [Parameter(Mandatory=$false)] [switch]$Dev,$
+    [Parameter(Mandatory=$false)] [string]$DeliveryController,
     [Parameter(Position = 1, Mandatory=$False)][Alias("OF")][ValidateNotNullOrEmpty()] [string]$OutFilePath="C:\Temp\Morning_Report.log"
 )
 
 Start-Transcript -Path $OutFilePath -Append
 
-Add-PSSnapin Citrix* -erroraction silentlycontinue
+#Check Snapin can be loaded
+#Could be improved by only loading the necessary modules but it would not be compatible with version older than 1912
+Write-Host "Loading Citrix Snapin... " -NoNewline
+if(!(Add-PSSnapin Citrix* -ErrorAction SilentlyContinue -PassThru )){
+    Write-Host "Failed" -ForegroundColor Red
+    Write-Host "Citrix Snapin cannot be loaded. Please, check the component is installed on the computer." -ForegroundColor Red
+    #Stop logging
+    Stop-Transcript 
+    break
+}
+Write-Host "OK" -ForegroundColor Green
+
+################################################################################################
+#Checking the parameters
+################################################################################################
+
+#Check if the DeliveryController parameter is set or if it has to use the local machine
+if($DeliveryController){
+    #Check if the parameter is a FQDN or not
+    Write-Host "Trying to contact the Delivery Controller $DeliveryController... " -NoNewline
+    if($DeliveryController -contains "."){
+        $DDC = Get-BrokerController -DNSName "$DeliveryController"
+    } else {
+        $DDC = Get-BrokerController -DNSName "$DeliveryController.$env:USERDNSDOMAIN"
+    }
+} else {
+    Write-Host "Trying to contact the Delivery Controller $env:COMPUTERNAME... " -NoNewline
+    $DDC = Get-BrokerController -DNSName "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
+}
+if(($DDC)){
+    Write-Host "OK" -ForegroundColor Green
+} else {
+    Write-Host "Failed" -ForegroundColor Red
+    Write-Host "Cannot contact the Delivery Controller. Please, check the role is installed on the target computer and your account is allowed to communicate with it." -ForegroundColor Red
+}
 
 ###################################################################################################################
 # Mail settings
