@@ -3,19 +3,26 @@
   Run some checks during the morning and ensure the Citrix infrastructure is compliamt with our tresholds (check Description for more details).
   Then email report to Citrix engineers.
 .DESCRIPTION
-  Check all PCS XenApp servers are up and running at 8:00.
-  Email report to Citrix engineers.
+  If corresponding parameters are set:
+    - Check all resources from on or more DeliveryGroup are up and running when the script is executed (-DeliveryGroup)
+  Finally, email report to Citrix engineers.
+  Without any parameter set, the script will only send an empty mail if smtp server and recipients settings are correct.
 .Parameter Dev
  During script development, send the report to the "Dev" recipients list.
 .Parameter DeliveryController
- Specifiy the Delivery Controller to use for the provision
+ Specifiy the Delivery Controller to use for the checks.
  This parameter is optionnal, by default it will use with the local machine.
+.Parameter DeliveryGroup
+ Specifiy one or more Delivery Group(s) to check all resources associated are up and running when the script is executed.
+ This parameter is optionnal, by default it won't check any Delivery Group.
 .EXAMPLE
-    PS C:\PSScript > Morning_Report.ps1 
+    PS C:\PSScript > Morning_Report.ps1 -DeliveryController "CTXDDC01" 
     Run some checks during the morning and ensure the Citrix infrastructure is compliamt with our tresholds (check Description for more details).
 .EXAMPLE
-    PS C:\PSScript > Morning_Report.ps1 -DeliveryController "CTXDDC01"
-    Run some checks during the morning and ensure the Citrix infrastructure is compliamt with our tresholds (check Description for more details).
+    PS C:\PSScript > Morning_Report.ps1 -DeliveryGroup "VDI","XenApp"
+    Run some checks during the morning and ensure the Citrix infrastructure is compliamt with our tresholds (check Description for more details),
+    check all resources associated to "VDI" and "XenApp" delivery groups are up and running,
+    then send the mail to the "Dev" recipients list (to avoid spam during script development).
 .EXAMPLE
     PS C:\PSScript > Morning_Report.ps1 -Dev
     Run some checks during the morning and ensure the Citrix infrastructure is compliamt with our tresholds (check Description for more details),
@@ -86,11 +93,13 @@ if($DeliveryGroup){
         if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DG -ErrorAction Ignore){
             Write-host "OK" -ForeGroundColor Green
         } Else {
+            $error++
             Write-host "Failed" -ForeGroundColor Red
-            Write-host "$DG is not a valid DeliveryGroup. Please, check the parameter then restart the script" -ForeGroundColor Red
+            Write-host "$DG is not a valid DeliveryGroup." -ForeGroundColor Red
         }
     }
     if($error -ne 0){
+        Write-host "At least, one DeliveryGroup does not exist. Please, check the parameter then restart the script" -ForeGroundColor Red
         Stop-Transcript
         exit
     }
@@ -124,32 +133,32 @@ $mailbody = $mailbody + "<body>"
 
 function CheckDeliveryGroup{
     param(
-        [parameter(Mandatory=$true)] [string]$DG
+        [parameter(Mandatory=$true)] [string]$DeliveryGroup
     )
 ###################################################################################################################
-# Check all servers from specified DeliveryGroup are up and running at 8:00.
+# Check all resources from specified DeliveryGroup are up and running at 8:00.
 ###################################################################################################################
 
     $error = 0
 
-    $Servers = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName $DG | Select MachineName,PowerState,InMaintenanceMode,RegistrationState
-    foreach($server in $Servers){
-        $MachineName = $server.MachineName
-        if($server.Powerstate -ne "On"){
+    $resources = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName $DeliveryGroup | Select MachineName,PowerState,InMaintenanceMode,RegistrationState
+    foreach($resource in $resources){
+        $MachineName = $resource.MachineName
+        if($resource.Powerstate -ne "On"){
             $error++
-            $mailbody += "<div style=""color:orange;"">$MachineName is not powered On! Script is powering On the server...</div>"
+            $mailbody += "<div style=""color:orange;"">$MachineName is not powered On! Script is powering On the resource...</div>"
             New-BrokerHostingPowerAction -AdminAddress $DeliveryController -MachineName $MachineName -Action TurnOn
             Start-Sleep -Seconds 120
             if((Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName).PowerState -ne "On" -and (Get-BrokerMachine -MachineName $MachineName).RegistrationState -ne "Registered"){
-                $mailbody += "<div style=""color:red;"">Cannot start and register $MachineName. Please check the server manually.</div>"
+                $mailbody += "<div style=""color:red;"">Cannot start and register $MachineName. Please check the resource manually.</div>"
             }
         }
-        if($server.inMaintenanceMode -eq $true){
+        if($resource.inMaintenanceMode -eq $true){
             $error++
             $mailbody += "<div style=""color:orange;"">$MachineName is in Maintenance Mode! Script is disabling maintenance mode...<br/></div>"
             Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName | Set-BrokerMachine -InMaintenanceMode $false
             if((Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName).InMaintenanceMode -eq $true){
-                $mailbody += "<div style=""color:red;"">Cannot exit Maintenance Mode on $MachineName. Please check the server manually.</div><br/>"
+                $mailbody += "<div style=""color:red;"">Cannot exit Maintenance Mode on $MachineName. Please check the resource manually.</div><br/>"
             } else {
                 $mailbody += "$MachineName is now out of Maintenance Mode.<br/>"
             }
@@ -157,16 +166,16 @@ function CheckDeliveryGroup{
     }
 
     if($error -eq 0){
-        $mailbody += "<div style=""color:green;"">All PCS XenApps servers are up and registered!</div>"
+        $mailbody += "<div style=""color:green;"">All resources from $DeliveryGroup are up and registered!</div>"
     } else {
-        $mailbody += "<div style=""color:green;"">Other PCS XenApps servers are up and registered.</div>"
+        $mailbody += "<div style=""color:green;"">Other resources from $DeliveryGroup are up and registered.</div>"
     }
 
     return $mailbody
 }
 
 ###################################################################################################################
-# Construction report
+# Constructing report
 ###################################################################################################################
 
 foreach($DG in $DeliveryGroup){
