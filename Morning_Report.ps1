@@ -74,27 +74,27 @@ if(($DDC)){
 } else {
     Write-Host "Failed" -ForegroundColor Red
     Write-Host "Cannot contact the Delivery Controller. Please, check the role is installed on the target computer and your account is allowed to communicate with it." -ForegroundColor Red
+    Stop-Transcript
+    exit
 }
 
 #Check if the DeliveryGroup(s) specified in parameter exist(s)
 if($DeliveryGroup){
+    $error = 0
     foreach($DG in $DeliveryGroup){
-        Write-Host "Checking if $DG exists..." -NoNewline
-        try {
-            Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DG | Out-Null
+        Write-Host "Checking if DeliveryGroup ""$DG"" exists..." -NoNewline
+        if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DG -ErrorAction Ignore){
             Write-host "OK" -ForeGroundColor Green
-        }
-        catch {
+        } Else {
             Write-host "Failed" -ForeGroundColor Red
-            "$DG is not a valid DeliveryGroup. Please, check the parameter then restart the script" -ForeGroundColor Red
-            Stop-Transcript
-            exit
+            Write-host "$DG is not a valid DeliveryGroup. Please, check the parameter then restart the script" -ForeGroundColor Red
         }
     }
+    if($error -ne 0){
+        Stop-Transcript
+        exit
+    }
 }
-
-Stop-Transcript
-exit
 
 ###################################################################################################################
 # Mail settings
@@ -122,42 +122,56 @@ $mailbody = $mailbody + "</head>"
 $mailbody = $mailbody + "<body>"
 
 
+function CheckDeliveryGroup{
+    param(
+        [parameter(Mandatory=$true)] [string]$DG
+    )
 ###################################################################################################################
-# Check all PCS XenApp servers are up and running at 8:00.
+# Check all servers from specified DeliveryGroup are up and running at 8:00.
 ###################################################################################################################
 
-$error = 0
+    $error = 0
 
-$PCSServers = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName  | Select MachineName,PowerState,InMaintenanceMode,RegistrationState
-foreach($server in $PCSServers){
-    $MachineName = $server.MachineName
-    if($server.Powerstate -ne "On"){
-        $error++
-        $mailbody += "<div style=""color:orange;"">$MachineName is not powered On! Script is powering On the server...</div>"
-        New-BrokerHostingPowerAction -AdminAddress $DeliveryController -MachineName $MachineName -Action TurnOn
-        Start-Sleep -Seconds 120
-        if((Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName).PowerState -ne "On" -and (Get-BrokerMachine -MachineName $MachineName).RegistrationState -ne "Registered"){
-            $mailbody += "<div style=""color:red;"">Cannot start and register $MachineName. Please check the server manually.</div>"
+    $Servers = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName $DG | Select MachineName,PowerState,InMaintenanceMode,RegistrationState
+    foreach($server in $Servers){
+        $MachineName = $server.MachineName
+        if($server.Powerstate -ne "On"){
+            $error++
+            $mailbody += "<div style=""color:orange;"">$MachineName is not powered On! Script is powering On the server...</div>"
+            New-BrokerHostingPowerAction -AdminAddress $DeliveryController -MachineName $MachineName -Action TurnOn
+            Start-Sleep -Seconds 120
+            if((Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName).PowerState -ne "On" -and (Get-BrokerMachine -MachineName $MachineName).RegistrationState -ne "Registered"){
+                $mailbody += "<div style=""color:red;"">Cannot start and register $MachineName. Please check the server manually.</div>"
+            }
+        }
+        if($server.inMaintenanceMode -eq $true){
+            $error++
+            $mailbody += "<div style=""color:orange;"">$MachineName is in Maintenance Mode! Script is disabling maintenance mode...<br/></div>"
+            Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName | Set-BrokerMachine -InMaintenanceMode $false
+            if((Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName).InMaintenanceMode -eq $true){
+                $mailbody += "<div style=""color:red;"">Cannot exit Maintenance Mode on $MachineName. Please check the server manually.</div><br/>"
+            } else {
+                $mailbody += "$MachineName is now out of Maintenance Mode.<br/>"
+            }
         }
     }
-    if($server.inMaintenanceMode -eq $true){
-        $error++
-        $mailbody += "<div style=""color:orange;"">$MachineName is in Maintenance Mode! Script is disabling maintenance mode...<br/></div>"
-        Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName | Set-BrokerMachine -InMaintenanceMode $false
-        if((Get-BrokerMachine -AdminAddress $DeliveryController -MachineName $MachineName).InMaintenanceMode -eq $true){
-            $mailbody += "<div style=""color:red;"">Cannot exit Maintenance Mode on $MachineName. Please check the server manually.</div><br/>"
-        } else {
-            $mailbody += "$MachineName is now out of Maintenance Mode.<br/>"
-        }
+
+    if($error -eq 0){
+        $mailbody += "<div style=""color:green;"">All PCS XenApps servers are up and registered!</div>"
+    } else {
+        $mailbody += "<div style=""color:green;"">Other PCS XenApps servers are up and registered.</div>"
     }
+
+    return $mailbody
 }
 
-if($error -eq 0){
-    $mailbody += "<div style=""color:green;"">All PCS XenApps servers are up and registered!</div>"
-} else {
-    $mailbody += "<div style=""color:green;"">Other PCS XenApps servers are up and registered.</div>"
-}
+###################################################################################################################
+# Construction report
+###################################################################################################################
 
+foreach($DG in $DeliveryGroup){
+    $mailbody = CheckDeliveryGroup -DeliveryGroup $DG
+}
 
 ###################################################################################################################
 # Sending email
