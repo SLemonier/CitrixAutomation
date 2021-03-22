@@ -37,7 +37,8 @@ Param(
 $Dev = $true
 $DeliveryController # = "CXDCACA023"
 $DeliveryGroup = @(
-    "W12 XenApp PCS 11-2"
+    "W12 XenApp PCS 11-2",
+    "truc"
 )
 $sites = @(
     "truc",
@@ -231,9 +232,7 @@ $mailbody = $mailbody + "<body>"
 # Constructing report
 ###################################################################################################################
 
-foreach($DG in $DeliveryGroup){
-    $mailbody += CheckDeliveryGroup -DeliveryGroup $DG
-}
+$mailbody += CheckDeliveryGroup -DeliveryGroup $DeliveryGroup
  
 $mailbody += "<br/>"
 $mailbody += "<table style='background:black;border:none'><tr><td width=450px><p><b><span style='color:white'>SSL Certificates</span></b></p></td></tr></table><br/>"
