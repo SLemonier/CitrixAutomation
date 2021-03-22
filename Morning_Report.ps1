@@ -246,13 +246,6 @@ $mailbody = $mailbody + "<body>"
 $mailbody += CheckDeliveryGroup -DeliveryGroup $DeliveryGroup
 $mailbody += CheckCertificatec -sites $sites
 
-$mailbody += "<br/>"
-$mailbody += "<table style='background:black;border:none'><tr><td width=450px><p><b><span style='color:white'>SSL Certificates</span></b></p></td></tr></table><br/>"
- 
- 
-foreach($URL in $sites){
-    
-}
 ###################################################################################################################
 # Sending email
 ###################################################################################################################
