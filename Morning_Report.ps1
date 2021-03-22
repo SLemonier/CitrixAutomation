@@ -40,9 +40,13 @@ $DeliveryGroup = @(
     "W12 XenApp PCS 11-2"
 )
 $sites = @(
-    "truc",
+    "https://mydesk.hospicegeneral.ch",
     "https://citrixint.adir.implisis.ch",
-    "https://cxstfaca025.adir.implisis.ch"
+    "https://citrixint-qual.adir.implisis.ch",
+    "https://cxstfaca025.adir.implisis.ch",
+    "https://cxstfsis025.adir.implisis.ch",
+    "https://cxstfaca126.adir.implisis.ch",
+    "https://cxstfaca126.adir.implisis.ch"
 )
 
 # E-mail report details
@@ -162,7 +166,11 @@ function CheckDeliveryGroup{
     if($warning -eq 0){
         $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
     } else {
-        $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>$warning warning(s)</td></span></b></tr></table><br/>"
+        if($warning -eq 1){
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups/p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
+        } else {
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups/p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
+        }    
     }
     $mailbody += $mailbodyintermediate
 
@@ -182,7 +190,7 @@ function CheckCertificate{
     $warning = 0
     # Disable certificate validation
     [Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
-    foreach{$URL in $sites}{
+    foreach($URL in $sites){
         if(!($URL.StartsWith("https://"))){
             $URL = "https://$URL"
         }
@@ -205,7 +213,7 @@ function CheckCertificate{
             if ($certExpiresIn -gt $minCertAge){
                 $warning++
                 Write-Host "The $URL certificate expires in $certExpiresIn days [$certExpDate]" -ForeGroundColor Green
-                $mailbodyintermediate += "<div>$URL certificate expires in $certExpiresIn days [$certExpDate]</div>"
+                $mailbodyintermediate += "<div style=""color:green;"">$URL certificate expires in $certExpiresIn days [$certExpDate]</div>"
             } else {
                 $mailbodyintermediate += "<div style=""color:red;"">$URL certificate expires in $certExpiresIn days</div>"
                 Write-Host "The $URL certificate expires in $certExpiresIn days" -ForeGroundColor Red
@@ -213,10 +221,14 @@ function CheckCertificate{
         }
     }
 
-    f($warning -eq 0){
+    if($warning -eq 0){
         $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
     } else {
-        $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates/p></td><td style='text-align:right;border:none'>$warning warning(s)</td></span></b></tr></table><br/>"
+        if($warning -eq 1){
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates/p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
+        } else {
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates/p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
+        }
     }
     $mailbody += $mailbodyintermediate
 
@@ -244,7 +256,8 @@ $mailbody = $mailbody + "<body>"
 ###################################################################################################################
 
 $mailbody += CheckDeliveryGroup -DeliveryGroup $DeliveryGroup
-$mailbody += CheckCertificatec -sites $sites
+$mailbody += "<br/>"
+$mailbody += CheckCertificate -sites $sites
 
 ###################################################################################################################
 # Sending email
