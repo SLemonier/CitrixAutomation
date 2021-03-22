@@ -40,13 +40,12 @@ $DeliveryGroup = @(
     "W12 XenApp PCS 11-2"
 )
 $sites = @(
-    "https://mydesk.hospicegeneral.ch",
     "https://citrixint.adir.implisis.ch",
     "https://citrixint-qual.adir.implisis.ch",
     "https://cxstfaca025.adir.implisis.ch",
     "https://cxstfsis025.adir.implisis.ch",
     "https://cxstfaca126.adir.implisis.ch",
-    "https://cxstfaca126.adir.implisis.ch"
+    "https://cxstfsis126.adir.implisis.ch"
 )
 
 # E-mail report details
