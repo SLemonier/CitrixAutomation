@@ -42,10 +42,6 @@ $DeliveryGroup = @(
 $sites = @(
     "https://citrixint.adir.implisis.ch",
     "https://citrixint-qual.adir.implisis.ch",
-    "https://cxstfaca025.adir.implisis.ch",
-    "https://cxstfsis025.adir.implisis.ch",
-    "https://cxstfaca126.adir.implisis.ch",
-    "https://cxstfsis126.adir.implisis.ch"
 )
 
 # E-mail report details
@@ -190,6 +186,8 @@ function CheckCertificate{
     # Disable certificate validation
     [Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
     foreach($URL in $sites){
+        $certExpiresIn = ""
+
         if(!($URL.StartsWith("https://"))){
             $URL = "https://$URL"
         }
