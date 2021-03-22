@@ -37,8 +37,7 @@ Param(
 $Dev = $true
 $DeliveryController # = "CXDCACA023"
 $DeliveryGroup = @(
-    "W12 XenApp PCS 11-2",
-    "truc"
+    "W12 XenApp PCS 11-2"
 )
 $sites = @(
     "truc",
@@ -161,9 +160,9 @@ function CheckDeliveryGroup{
         }
     }
     if($warning -eq 0){
-        $mailbody += "<table style='background:green;border:none'><tr width=450px><td><p><b><span style='color:white'>Delivery Groups</span></b></p></td><td align='right'>OK</td></tr></table><br/>"
+        $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
     } else {
-        $mailbody += "<table style='background:red;border:none'><tr width=450px><td><p><b><span style='color:white'>Delivery Groups</span></b></p></td><td align='right'>$warning warning(s)</td></tr></table><br/>"
+        $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>$warning warning(s)</td></span></b></tr></table><br/>"
     }
     $mailbody += $mailbodyintermediate
 
@@ -175,40 +174,52 @@ function CheckDeliveryGroup{
 ###################################################################################################################
 function CheckCertificate{
     param(
-        [parameter(Mandatory=$true)] [string]$URL
+        [parameter(Mandatory=$true)] [string[]]$sites
     )
 
     $minCertAge = 30 #in days
     $timeoutMs = 10000
+    $warning = 0
     # Disable certificate validation
     [Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+    foreach{$URL in $sites}{
+        if(!($URL.StartsWith("https://"))){
+            $URL = "https://$URL"
+        }
 
-    if(!($URL.StartsWith("https://"))){
-        $URL = "https://$URL"
-    }
-
-    Write-Host "Checking $URL... "
-    $req = [Net.HttpWebRequest]::Create($URL)
-    $req.Timeout = $timeoutMs
-    try {
-        $req.GetResponse() |Out-Null
-    } catch {
-        Write-Host "FAILED: "$_ -ForeGroundColor Red
-        $mailbody += "<div style=""color:red;"">$URL does not respond to WebRequest! $_</div>"
-    }
-    if($req.ServicePoint.Certificate.GetExpirationDateString() -ne $null){
-        $expDate = $req.ServicePoint.Certificate.GetExpirationDateString()
-        $certExpDate = [datetime]::ParseExact($expDate, “dd/MM/yyyy HH:mm:ss”, $null)
-        [int]$certExpiresIn = ($certExpDate - $(get-date)).Days
-        $certName = $req.ServicePoint.Certificate.GetName()
-        if ($certExpiresIn -gt $minCertAge){
-            Write-Host "The $URL certificate expires in $certExpiresIn days [$certExpDate]" -ForeGroundColor Green
-            $mailbody += "<div>$URL certificate expires in $certExpiresIn days [$certExpDate]</div>"
-        } else {
-            $mailbody += "<div style=""color:red;"">$URL certificate expires in $certExpiresIn days</div>"
-            Write-Host "The $URL certificate expires in $certExpiresIn days" -ForeGroundColor Red
+        Write-Host "Checking $URL... "
+        $req = [Net.HttpWebRequest]::Create($URL)
+        $req.Timeout = $timeoutMs
+        try {
+            $req.GetResponse() |Out-Null
+        } catch {
+            $warning++
+            Write-Host "FAILED: "$_ -ForeGroundColor Red
+            $mailbodyintermediate += "<div style=""color:red;"">$URL does not respond to WebRequest! $_</div>"
+        }
+        if($req.ServicePoint.Certificate.GetExpirationDateString() -ne $null){
+            $expDate = $req.ServicePoint.Certificate.GetExpirationDateString()
+            $certExpDate = [datetime]::ParseExact($expDate, “dd/MM/yyyy HH:mm:ss”, $null)
+            [int]$certExpiresIn = ($certExpDate - $(get-date)).Days
+            $certName = $req.ServicePoint.Certificate.GetName()
+            if ($certExpiresIn -gt $minCertAge){
+                $warning++
+                Write-Host "The $URL certificate expires in $certExpiresIn days [$certExpDate]" -ForeGroundColor Green
+                $mailbodyintermediate += "<div>$URL certificate expires in $certExpiresIn days [$certExpDate]</div>"
+            } else {
+                $mailbodyintermediate += "<div style=""color:red;"">$URL certificate expires in $certExpiresIn days</div>"
+                Write-Host "The $URL certificate expires in $certExpiresIn days" -ForeGroundColor Red
+            }
         }
     }
+
+    f($warning -eq 0){
+        $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
+    } else {
+        $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates/p></td><td style='text-align:right;border:none'>$warning warning(s)</td></span></b></tr></table><br/>"
+    }
+    $mailbody += $mailbodyintermediate
+
     return $mailbody
 }
     
@@ -233,13 +244,14 @@ $mailbody = $mailbody + "<body>"
 ###################################################################################################################
 
 $mailbody += CheckDeliveryGroup -DeliveryGroup $DeliveryGroup
- 
+$mailbody += CheckCertificatec -sites $sites
+
 $mailbody += "<br/>"
 $mailbody += "<table style='background:black;border:none'><tr><td width=450px><p><b><span style='color:white'>SSL Certificates</span></b></p></td></tr></table><br/>"
  
  
 foreach($URL in $sites){
-    $mailbody += CheckCertificate -URL $URL
+    
 }
 ###################################################################################################################
 # Sending email
