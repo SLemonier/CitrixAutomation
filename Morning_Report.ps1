@@ -7,14 +7,6 @@
     - Check all resources from on or more DeliveryGroup are up and running when the script is executed (-DeliveryGroup)
   Finally, email report to Citrix engineers.
   Without any parameter set, the script will only send an empty mail if smtp server and recipients settings are correct.
-.Parameter Dev
- During script development, send the report to the "Dev" recipients list.
-.Parameter DeliveryController
- Specifiy the Delivery Controller to use for the checks.
- This parameter is optionnal, by default it will use with the local machine.
-.Parameter DeliveryGroup
- Specifiy one or more Delivery Group(s) to check all resources associated are up and running when the script is executed.
- This parameter is optionnal, by default it won't check any Delivery Group.
 .EXAMPLE
     PS C:\PSScript > Morning_Report.ps1 -DeliveryController "CTXDDC01" 
     Run some checks during the morning and ensure the Citrix infrastructure is compliamt with our tresholds (check Description for more details).
@@ -39,75 +31,19 @@
 
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$false)] [switch]$Dev,
-    [Parameter(Mandatory=$false)] [string]$DeliveryController,
-    [Parameter(Mandatory=$false)] [string[]]$DeliveryGroup,
     [Parameter(Mandatory=$False)][Alias("OF")][ValidateNotNullOrEmpty()] [string]$OutFilePath="C:\Temp\Morning_Report.log"
 )
 
-Start-Transcript -Path $OutFilePath -Append
-
-#Check Snapin can be loaded
-#Could be improved by only loading the necessary modules but it would not be compatible with version older than 1912
-Write-Host "Loading Citrix Snapin... " -NoNewline
-if(!(Add-PSSnapin Citrix* -ErrorAction SilentlyContinue -PassThru )){
-    Write-Host "Failed" -ForegroundColor Red
-    Write-Host "Citrix Snapin cannot be loaded. Please, check the component is installed on the computer." -ForegroundColor Red
-    #Stop logging
-    Stop-Transcript 
-    break
-}
-Write-Host "OK" -ForegroundColor Green
-
-################################################################################################
-#Checking the parameters
-################################################################################################
-
-#Check if the DeliveryController parameter is set or if it has to use the local machine
-if($DeliveryController){
-    #Check if the parameter is a FQDN or not
-    Write-Host "Trying to contact the Delivery Controller $DeliveryController... " -NoNewline
-    if($DeliveryController -contains "."){
-        $DDC = Get-BrokerController -DNSName "$DeliveryController"
-    } else {
-        $DDC = Get-BrokerController -DNSName "$DeliveryController.$env:USERDNSDOMAIN"
-    }
-} else {
-    Write-Host "Trying to contact the Delivery Controller $env:COMPUTERNAME... " -NoNewline
-    $DDC = Get-BrokerController -DNSName "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
-}
-if(($DDC)){
-    Write-Host "OK" -ForegroundColor Green
-} else {
-    Write-Host "Failed" -ForegroundColor Red
-    Write-Host "Cannot contact the Delivery Controller. Please, check the role is installed on the target computer and your account is allowed to communicate with it." -ForegroundColor Red
-    Stop-Transcript
-    exit
-}
-
-#Check if the DeliveryGroup(s) specified in parameter exist(s)
-if($DeliveryGroup){
-    $error = 0
-    foreach($DG in $DeliveryGroup){
-        Write-Host "Checking if DeliveryGroup ""$DG"" exists..." -NoNewline
-        if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DG -ErrorAction Ignore){
-            Write-host "OK" -ForeGroundColor Green
-        } Else {
-            $error++
-            Write-host "Failed" -ForeGroundColor Red
-            Write-host "$DG is not a valid DeliveryGroup." -ForeGroundColor Red
-        }
-    }
-    if($error -ne 0){
-        Write-host "At least, one DeliveryGroup does not exist. Please, check the parameter then restart the script" -ForeGroundColor Red
-        Stop-Transcript
-        exit
-    }
-}
-
-###################################################################################################################
-# Mail settings
-###################################################################################################################
+$Dev = $true
+$DeliveryController # = "CXDCACA023"
+$DeliveryGroup = @(
+    "W12 XenApp PCS 11-2"
+)
+$sites = @(
+    "truc",
+    "https://citrixint.adir.implisis.ch",
+    "https://cxstfaca025.adir.implisis.ch"
+)
 
 # E-mail report details
 $emailFrom = "citrix@hospicegeneral.ch"
@@ -118,27 +54,80 @@ if($Dev){
 }
 $smtpServer    = "smtp.implisis.ch"
 
-$mailbody = $mailbody + "<!DOCTYPE html>"
-$mailbody = $mailbody + "<html>"
-$mailbody = $mailbody + "<head>"
-$mailbody = $mailbody + "<style>"
-$mailbody = $mailbody + "BODY{background-color:#fbfbfb; font-family: Arial;}"
-$mailbody = $mailbody + "TABLE{border-width: 1px;border-style: solid;border-color: black;border-collapse: collapse; width:60%; }"
-$mailbody = $mailbody + "TH{border-width: 1px;padding: 0px;border-style: solid;border-color: black; text-align:left;}"
-$mailbody = $mailbody + "TD{border-width: 1px;padding: 0px;border-style: solid;border-color: black;}"
-$mailbody = $mailbody + "</style>"
-$mailbody = $mailbody + "</head>"
-$mailbody = $mailbody + "<body>"
+Start-Transcript -Path $OutFilePath -Append
 
+################################################################################################
+#Checking the parameters
+################################################################################################
+function CheckingParameters {
+    param(
+        [parameter(Mandatory=$true)] [ValidateNotNullOrEmpty] [string]$DeliveryGroup,
+        [parameter(Mandatory=$true)] [string[]]$DeliveryGroup
+    )
 
+    #Check Snapin can be loaded
+    #Could be improved by only loading the necessary modules but it would not be compatible with version older than 1912
+    Write-Host "Loading Citrix Snapin... " -NoNewline
+    if(!(Add-PSSnapin Citrix* -ErrorAction SilentlyContinue -PassThru )){
+        Write-Host "Failed" -ForegroundColor Red
+        Write-Host "Citrix Snapin cannot be loaded. Please, check the component is installed on the computer." -ForegroundColor Red
+        #Stop logging
+        Stop-Transcript 
+        break
+    }
+    Write-Host "OK" -ForegroundColor Green
+
+    #Check if the DeliveryController parameter is set or if it has to use the local machine
+    if($DeliveryController){
+        #Check if the parameter is a FQDN or not
+        Write-Host "Trying to contact the Delivery Controller $DeliveryController... " -NoNewline
+        if($DeliveryController -contains "."){
+            $DDC = Get-BrokerController -DNSName "$DeliveryController"
+        } else {
+            $DDC = Get-BrokerController -DNSName "$DeliveryController.$env:USERDNSDOMAIN"
+        }
+    } else {
+        Write-Host "Trying to contact the Delivery Controller $env:COMPUTERNAME... " -NoNewline
+        $DDC = Get-BrokerController -DNSName "$env:COMPUTERNAME.$env:USERDNSDOMAIN"
+    }
+    if(($DDC)){
+        Write-Host "OK" -ForegroundColor Green
+    } else {
+        Write-Host "Failed" -ForegroundColor Red
+        Write-Host "Cannot contact the Delivery Controller. Please, check the role is installed on the target computer and your account is allowed to communicate with it." -ForegroundColor Red
+        Stop-Transcript
+        exit
+    }
+
+    #Check if the DeliveryGroup(s) specified in parameter exist(s)
+    if($DeliveryGroup){
+        $error = 0
+        foreach($DG in $DeliveryGroup){
+            Write-Host "Checking if DeliveryGroup ""$DG"" exists..." -NoNewline
+            if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DG -ErrorAction Ignore){
+                Write-host "OK" -ForeGroundColor Green
+            } Else {
+                $error++
+                Write-host "Failed" -ForeGroundColor Red
+                Write-host "$DG is not a valid DeliveryGroup." -ForeGroundColor Red
+            }
+        }
+        if($error -ne 0){
+            Write-host "At least, one DeliveryGroup does not exist. Please, check the parameter then restart the script" -ForeGroundColor Red
+            Stop-Transcript
+            exit
+        }
+    }
+}
+
+###################################################################################################################
+# Check all resources from specified DeliveryGroup are up and running at 8:00.
+###################################################################################################################
 function CheckDeliveryGroup{
     param(
         [parameter(Mandatory=$true)] [string]$DeliveryGroup
     )
-###################################################################################################################
-# Check all resources from specified DeliveryGroup are up and running at 8:00.
-###################################################################################################################
-
+    
     $error = 0
 
     $resources = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName $DeliveryGroup | Select MachineName,PowerState,InMaintenanceMode,RegistrationState
@@ -175,11 +164,71 @@ function CheckDeliveryGroup{
 }
 
 ###################################################################################################################
+# Check the certificates are still valid or alert if expiration date is less than 30 fays.
+###################################################################################################################
+function CheckCertificate{
+    param(
+        [parameter(Mandatory=$true)] [string]$URL
+    )
+
+    $minCertAge = 30 #in days
+    $timeoutMs = 10000
+    # Disable certificate validation
+    [Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+
+    if(!($URL.StartsWith("https://"))){
+        $URL = "https://$URL"
+    }
+
+    Write-Host "Checking $URL... "
+    $req = [Net.HttpWebRequest]::Create($URL)
+    $req.Timeout = $timeoutMs
+    try {
+        $req.GetResponse() |Out-Null
+    } catch {
+        Write-Host "FAILED: "$_ -ForeGroundColor Red
+        $mailbody += "<div style=""color:red;"">$URL does not respond to WebRequest! $_</div>"
+    }
+    $expDate = $req.ServicePoint.Certificate.GetExpirationDateString()
+    $certExpDate = [datetime]::ParseExact($expDate, “dd/MM/yyyy HH:mm:ss”, $null)
+    [int]$certExpiresIn = ($certExpDate - $(get-date)).Days
+    $certName = $req.ServicePoint.Certificate.GetName()
+    if ($certExpiresIn -gt $minCertAge){
+        Write-Host "The $URL certificate expires in $certExpiresIn days [$certExpDate]" -ForeGroundColor Red
+        $mailbody += "<div style=""color:red;"">$URL certificate expires in $certExpiresIn days [$certExpDate]</div>"
+    } else {
+        $mailbody += "<div>$URL certificate expires in $certExpiresIn days</div>"
+        $message= "The $URL certificate expires in $certExpiresIn days" -ForeGroundColor Green
+    }
+}
+    
+###################################################################################################################
+# Mail settings
+###################################################################################################################
+
+$mailbody = $mailbody + "<!DOCTYPE html>"
+$mailbody = $mailbody + "<html>"
+$mailbody = $mailbody + "<head>"
+$mailbody = $mailbody + "<style>"
+$mailbody = $mailbody + "BODY{background-color:#fbfbfb; font-family: Arial;}"
+$mailbody = $mailbody + "TABLE{border-width: 1px;border-style: solid;border-color: black;border-collapse: collapse; width:60%; }"
+$mailbody = $mailbody + "TH{border-width: 1px;padding: 0px;border-style: solid;border-color: black; text-align:left;}"
+$mailbody = $mailbody + "TD{border-width: 1px;padding: 0px;border-style: solid;border-color: black;}"
+$mailbody = $mailbody + "</style>"
+$mailbody = $mailbody + "</head>"
+$mailbody = $mailbody + "<body>"
+
+###################################################################################################################
 # Constructing report
 ###################################################################################################################
 
+$mailbody = CheckingParameters -DeliveryController $DeliveryController -DeliveryGroup $DeliveryGroup
+
 foreach($DG in $DeliveryGroup){
     $mailbody = CheckDeliveryGroup -DeliveryGroup $DG
+}
+foreach($URL in $sites){
+    $mailbody = CheckCertificate -URL $URL
 }
 
 ###################################################################################################################
