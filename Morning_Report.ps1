@@ -41,7 +41,7 @@ $DeliveryGroup = @(
 )
 $sites = @(
     "https://citrixint.adir.implisis.ch",
-    "https://citrixint-qual.adir.implisis.ch",
+    "https://citrixint-qual.adir.implisis.ch"
 )
 
 # E-mail report details
@@ -222,9 +222,9 @@ function CheckCertificate{
         $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
     } else {
         if($warning -eq 1){
-            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates/p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates</p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
         } else {
-            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates/p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>SSL Certificates</p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
         }
     }
     $mailbody += $mailbodyintermediate
