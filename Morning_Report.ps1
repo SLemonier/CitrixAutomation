@@ -26,7 +26,7 @@
 .NOTES
   Version:        0.2
   Author:         Steven Lemonier
-  Creation Date:  2021-03-08
+  Creation Date:  2021-03-22
 #>
 
 [CmdletBinding()]
@@ -42,6 +42,11 @@ $DeliveryGroup = @(
 $sites = @(
     "https://citrixint.adir.implisis.ch",
     "https://citrixint-qual.adir.implisis.ch"
+)
+$profilefolders = @(
+    "\\CXUPMSIS069\CTXW10_profiles$",
+    "\\CXUPMSIS069\CTXW10_redirected$",
+    "\\CXUPMSIS069\CTXW10_o365token$",
 )
 
 # E-mail report details
@@ -231,6 +236,46 @@ function CheckCertificate{
 
     return $mailbody
 }
+
+###################################################################################################################
+# Check the profile folders for orphaned SIDs.
+###################################################################################################################
+function CheckProfileFolders {
+    param(
+        [parameter(Mandatory=$true)] [string[]]$folders
+    )
+    $warning = 0
+
+    foreach($folder in $folders){
+        if(Test-Path -path $folder){
+            $orphanedSID = Get-ChildItemp -path $folder | Get-ACL | where { $_.Owner -match "S-1-5-" } | Select Path,Owner
+            foreach($Account in $orphanedSID){
+                $warning++
+                $path = (Convert-Path $Account.Path).Replace("E:","$folder")
+                $mailbodyintermediate = "<div style=""color:red;"">$path has an orphaned SID as owner!</div>"
+                $mailbodyremediate = "<div>Remove-Item -path $path -Recurse -Force</div>" 
+            }
+        } else {
+            $warning++
+            $mailbodyintermediate = "<div style=""color:red;"">$Folder does not exist!</div>"
+        }
+    }
+
+    if($warning -eq 0){
+        $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Profiles</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
+    } else {
+        if($warning -eq 1){
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Profiles</p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
+        } else {
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Profiles</p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
+        }
+    }
+    $mailbody += $mailbodyintermediate
+    $mailbody += "<br/>"
+    $mailbody += $mailbodyremediate
+
+    return $mailbody
+}
     
 ###################################################################################################################
 # Mail settings
@@ -255,6 +300,9 @@ $mailbody = $mailbody + "<body>"
 $mailbody += CheckDeliveryGroup -DeliveryGroup $DeliveryGroup
 $mailbody += "<br/>"
 $mailbody += CheckCertificate -sites $sites
+$mailbody += "<br/>"
+$mailbody += CheckProfileFolders -folders $profilefolders
+
 
 ###################################################################################################################
 # Sending email
