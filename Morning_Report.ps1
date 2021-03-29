@@ -46,7 +46,7 @@ $sites = @(
 $profilefolders = @(
     "\\CXUPMSIS069\CTXW10_profiles$",
     "\\CXUPMSIS069\CTXW10_redirected$",
-    "\\CXUPMSIS069\CTXW10_o365token$",
+    "\\CXUPMSIS069\CTXW10_o365token$"
 )
 
 # E-mail report details
@@ -101,18 +101,18 @@ Start-Transcript -Path $OutFilePath -Append
 
     #Check if the DeliveryGroup(s) specified in parameter exist(s)
     if($DeliveryGroup){
-        $error = 0
+        $warning = 0
         foreach($DG in $DeliveryGroup){
             Write-Host "Checking if DeliveryGroup ""$DG"" exists..." -NoNewline
             if(Get-BrokerDesktopGroup -AdminAddress $DeliveryController -Name $DG -ErrorAction Ignore){
                 Write-host "OK" -ForeGroundColor Green
             } Else {
-                $error++
+                $warning++
                 Write-host "Failed" -ForeGroundColor Red
                 Write-host "$DG is not a valid DeliveryGroup." -ForeGroundColor Red
             }
         }
-        if($error -ne 0){
+        if($warning -ne 0){
             Write-host "At least, one DeliveryGroup does not exist. Please, check the parameter then restart the script" -ForeGroundColor Red
             Stop-Transcript
             exit
@@ -130,8 +130,7 @@ function CheckDeliveryGroup{
     $warning = 0
     
     foreach($DeliveryGroup in $DeliveryGroupList){
-        $errorDG = 0
-        $resources = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName $DeliveryGroup | Select MachineName,PowerState,InMaintenanceMode,RegistrationState
+        $resources = Get-BrokerMachine -AdminAddress $DeliveryController -DesktopGroupName $DeliveryGroup | Select-Object MachineName,PowerState,InMaintenanceMode,RegistrationState
         foreach($resource in $resources){
             $MachineName = $resource.MachineName
             if($resource.Powerstate -ne "On"){
@@ -207,11 +206,10 @@ function CheckCertificate{
             Write-Host "FAILED: "$_ -ForeGroundColor Red
             $mailbodyintermediate += "<div style=""color:red;"">$URL does not respond to WebRequest! $_</div>"
         }
-        if($req.ServicePoint.Certificate.GetExpirationDateString() -ne $null){
+        if($null -ne $req.ServicePoint.Certificate.GetExpirationDateString()){
             $expDate = $req.ServicePoint.Certificate.GetExpirationDateString()
             $certExpDate = [datetime]::ParseExact($expDate, “dd/MM/yyyy HH:mm:ss”, $null)
             [int]$certExpiresIn = ($certExpDate - $(get-date)).Days
-            $certName = $req.ServicePoint.Certificate.GetName()
             if ($certExpiresIn -gt $minCertAge){
                 $warning++
                 Write-Host "The $URL certificate expires in $certExpiresIn days [$certExpDate]" -ForeGroundColor Green
@@ -246,23 +244,47 @@ function CheckProfileFolders {
     )
     $warning = 0
 
+    if((Get-Date -Format dd) -eq 1){
+        write-host "First day of the month, purging folders with orphaned SID as owner..."
+        $mailbodytop += "<div>First day of the month, folowing folders will be purged:</div>"
+        if($warning -gt 10){
+            Write-Host "Too many folders to purge, commands should be executed manually."
+            $mailbodytop += "<div style=""color:red;"">Too many folders to purge, commands should be executed manually.</div>"
+        } else {
+            $mailbodytop += "<div style=""color:red;"">First day of the month, folowwing folders will be purged:</div>"
+        }
+    }
+
     foreach($folder in $folders){
+
+        Write-host "Checking $folder..." -NoNewline
+
         if(Test-Path -path $folder){
-            $orphanedSID = Get-ChildItemp -path $folder | Get-ACL | where { $_.Owner -match "S-1-5-" } | Select Path,Owner
+            $orphanedSID = Get-ChildItem -path $folder | Get-ACL | Where-Object { $_.Owner -match "S-1-5-" } | Select-Object Path,Owner
             foreach($Account in $orphanedSID){
                 $warning++
                 $path = (Convert-Path $Account.Path).Replace("E:","$folder")
-                $mailbodyintermediate = "<div style=""color:red;"">$path has an orphaned SID as owner!</div>"
-                $mailbodyremediate = "<div>Remove-Item -path $path -Recurse -Force</div>" 
+                $mailbodyintermediate += "<div style=""color:red;"">$path has an orphaned SID as owner!</div>"
+                if((Get-Date -Format dd) -eq 1){
+                    Remove-Item -Path $path -Recurse -Force
+                } else {
+                    $mailbodyremediate += "<div>Remove-Item -path $path -Recurse -Force</div>"
+                }
             }
         } else {
+            Write-host "Failed" -ForeGroundColor Red
             $warning++
-            $mailbodyintermediate = "<div style=""color:red;"">$Folder does not exist!</div>"
+            $mailbodyintermediate += "<div style=""color:red;"">$Folder does not exist!</div>"
         }
+
+        Write-host "OK" -ForeGroundColor Green
     }
 
     if($warning -eq 0){
         $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Profiles</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
+        if((Get-Date -Format dd) -eq 1){
+            $mailbodytop += "<div style=""color:green;"">No folder to purge!</div>"
+        }
     } else {
         if($warning -eq 1){
             $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Profiles</p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
@@ -270,6 +292,7 @@ function CheckProfileFolders {
             $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Profiles</p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
         }
     }
+    $mailbody += $mailbodytop
     $mailbody += $mailbodyintermediate
     $mailbody += "<br/>"
     $mailbody += $mailbodyremediate
