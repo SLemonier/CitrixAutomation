@@ -119,6 +119,45 @@ Start-Transcript -Path $OutFilePath -Append
         }
     }
 
+    ###################################################################################################################
+# Check Broker Site settings
+###################################################################################################################
+function CheckBrokerSite{
+
+    $warning = 0
+
+    Write-host "Checking Broker Site..." -NoNewline
+    $SiteProperties = Get-BrokerSite -AdminAddress $DeliveryController
+
+    if($SiteProperties.ConnectionLeasingEnabled -eq $True){
+        $warning++
+        $mailbodyintermediate += "<div style=""color:red;"">Connection Leasing is enabled. Feature is deprecated and should be turned off!</div>"
+    }
+
+    if($SiteProperties.LocalHostCacheEnabled -eq $False){
+        $warning++
+        $mailbodyintermediate += "<div style=""color:red;"">Local Host Cache is disabled. Site is not secured in case of an SQL outage ! Feature should be turned on!</div>"
+    }
+
+    if($SiteProperties.LicensingGracePeriodActive -eq $true){
+        $warning++
+        $mailbodyintermediate += "<div style=""color:red;"">Site is in Licensing Grace Period! Communication with License Server is no longer active and require investigation!!</div>"
+    }
+
+    if($warning -eq 0){
+        $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Site</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
+    } else {
+        if($warning -eq 1){
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Site</p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
+        } else {
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Site</p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
+        }    
+    }
+    $mailbody += $mailbodyintermediate
+
+    return $mailbody
+}
+
 
 ###################################################################################################################
 # Check all resources from specified DeliveryGroup are up and running at 8:00.
@@ -166,9 +205,9 @@ function CheckDeliveryGroup{
         $mailbody += "<table style='background:green'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>OK</td></span></b></tr></table><br/>"
     } else {
         if($warning -eq 1){
-            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups/p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>$warning warning</td></span></b></tr></table><br/>"
         } else {
-            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups/p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
+            $mailbody += "<table style='background:red'><b><span style='color:white'><tr width=450px><td style='border:none'><p>Delivery Groups</p></td><td style='text-align:right;border:none'>$warning warnings</td></span></b></tr></table><br/>"
         }    
     }
     $mailbody += $mailbodyintermediate
@@ -211,10 +250,10 @@ function CheckCertificate{
             $certExpDate = [datetime]::ParseExact($expDate, “dd/MM/yyyy HH:mm:ss”, $null)
             [int]$certExpiresIn = ($certExpDate - $(get-date)).Days
             if ($certExpiresIn -gt $minCertAge){
-                $warning++
                 Write-Host "The $URL certificate expires in $certExpiresIn days [$certExpDate]" -ForeGroundColor Green
                 $mailbodyintermediate += "<div style=""color:green;"">$URL certificate expires in $certExpiresIn days [$certExpDate]</div>"
             } else {
+                $warning++
                 $mailbodyintermediate += "<div style=""color:red;"">$URL certificate expires in $certExpiresIn days</div>"
                 Write-Host "The $URL certificate expires in $certExpiresIn days" -ForeGroundColor Red
             }
@@ -244,21 +283,8 @@ function CheckProfileFolders {
     )
     $warning = 0
 
-    if((Get-Date -Format dd) -eq 1){
-        write-host "First day of the month, purging folders with orphaned SID as owner..."
-        $mailbodytop += "<div>First day of the month, folowing folders will be purged:</div>"
-        if($warning -gt 10){
-            Write-Host "Too many folders to purge, commands should be executed manually."
-            $mailbodytop += "<div style=""color:red;"">Too many folders to purge, commands should be executed manually.</div>"
-        } else {
-            $mailbodytop += "<div style=""color:red;"">First day of the month, folowwing folders will be purged:</div>"
-        }
-    }
-
     foreach($folder in $folders){
-
         Write-host "Checking $folder..." -NoNewline
-
         if(Test-Path -path $folder){
             $orphanedSID = Get-ChildItem -path $folder | Get-ACL | Where-Object { $_.Owner -match "S-1-5-" } | Select-Object Path,Owner
             foreach($Account in $orphanedSID){
@@ -278,6 +304,17 @@ function CheckProfileFolders {
         }
 
         Write-host "OK" -ForeGroundColor Green
+    }
+
+    if((Get-Date -Format dd) -eq 1){
+        write-host "First day of the month, purging folders with orphaned SID as owner..."
+        $mailbodytop += "<div>First day of the month, folowing folders will be purged:</div>"
+        if($warning -gt 10){
+            Write-Host "Too many folders to purge, commands should be executed manually."
+            $mailbodytop += "<div style=""color:red;"">Too many folders to purge, commands should be executed manually.</div>"
+        } else {
+            $mailbodytop += "<div style=""color:red;"">First day of the month, folowwing folders will be purged:</div>"
+        }
     }
 
     if($warning -eq 0){
