@@ -357,6 +357,8 @@ $mailbody = $mailbody + "<body>"
 # Constructing report
 ###################################################################################################################
 
+$mailbody += CheckBrokerSite
+$mailbody += "<br/>"
 $mailbody += CheckDeliveryGroup -DeliveryGroup $DeliveryGroup
 $mailbody += "<br/>"
 $mailbody += CheckCertificate -sites $sites
